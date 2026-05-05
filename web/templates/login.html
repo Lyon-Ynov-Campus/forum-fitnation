@@ -6,8 +6,12 @@
     <div class="auth-header">
       <span class="brand-mark">FN</span>
       <h1>Content de te revoir</h1>
-      <p>Retrouve ton feed et ta communaut&#233;.</p>
+      <p>Retrouve ton feed et ta communauté.</p>
     </div>
+
+    {{if .Success}}
+    <p class="success">{{.Success}}</p>
+    {{end}}
 
     <form class="form" method="POST" action="/login">
       <label>
@@ -16,14 +20,14 @@
       </label>
       <label>
         Mot de passe
-        <input type="password" name="password" autocomplete="current-password" required placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+        <input type="password" name="password" autocomplete="current-password" required placeholder="••••••••">
       </label>
       <button class="button primary full" type="submit">Se connecter</button>
     </form>
 
-    <p class="auth-link"><a href="/forgot-password">Mot de passe oubli&#233; ?</a></p>
+    <p class="auth-link"><a href="/forgot-password">Mot de passe oublié ?</a></p>
     <div class="auth-separator">ou</div>
-    <p class="auth-link">Pas encore de compte ? <a href="/register">Cr&#233;er un compte</a></p>
+    <p class="auth-link">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
   </div>
 </section>
 {{end}}
