@@ -1,0 +1,42 @@
+{{define "title"}}Modifier le post | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell form-page">
+  <div class="card editor-card">
+    <div class="section-title editor-title">
+      <h1>Modifier le post</h1>
+      <button class="button primary" type="submit" form="edit-post-form">Enregistrer</button>
+    </div>
+
+    <form id="edit-post-form" class="form" method="POST" action="/posts/{{.Post.ID}}/update">
+      <label>
+        Titre
+        <input type="text" name="title" maxlength="120" value="{{.Post.Title}}" required>
+      </label>
+      <label>
+        Description
+        <textarea name="content" rows="10" required>{{.Post.Content}}</textarea>
+      </label>
+      <label>
+        Image
+        <input type="url" name="image_url" placeholder="Lien de l'image">
+      </label>
+      <div class="form-block">
+        <span>Tags</span>
+        <input type="hidden" name="tags" data-tags-input>
+        <div class="tag-row selectable">
+          <button type="button" data-tag-option="Musculation">Musculation</button>
+          <button type="button" data-tag-option="Cardio">Cardio</button>
+          <button type="button" data-tag-option="Nutrition">Nutrition</button>
+        </div>
+        <div class="tag-add">
+          <input type="text" data-new-tag placeholder="Ajouter un tag">
+          <button class="button soft" type="button" data-add-tag>Ajouter</button>
+        </div>
+        <p class="selected-tags" data-selected-tags>Aucun tag sélectionné</p>
+      </div>
+      <p>Visibilité : public</p>
+    </form>
+  </div>
+</section>
+{{end}}

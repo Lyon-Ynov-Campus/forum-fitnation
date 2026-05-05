@@ -1,0 +1,105 @@
+{{define "title"}}Feed | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell feed-layout">
+  <section class="content-column">
+    <div class="page-heading compact-heading">
+      <div>
+        <p class="eyebrow">FITNATION</p>
+        <h1>Feed</h1>
+      </div>
+      <a class="button primary" href="/posts/new">Créer un post</a>
+    </div>
+
+    <div class="tools-bar">
+      <label class="search-field">
+        <span>Rechercher</span>
+        <input type="search" data-search-input data-search-target=".post-card" placeholder="Titre du post">
+      </label>
+
+      <div class="sort-actions" aria-label="Trier les posts">
+        <a class="button soft" href="/?sort=recent">Récent</a>
+        <a class="button soft" href="/?sort=likes">Plus liké</a>
+        <a class="button soft" href="/?sort=comments">Plus commenté</a>
+      </div>
+    </div>
+
+    <div class="post-list">
+      {{range .Posts}}
+      <article class="card post-card" data-search-text="{{.Title}}">
+        <div class="post-meta">
+          <span class="avatar small">FN</span>
+          <div>
+            <strong>{{.Author}}</strong>
+            <span>{{.CreatedAt}}</span>
+          </div>
+        </div>
+
+        <h2>{{.Title}}</h2>
+        <p>{{.Content}}</p>
+
+        <div class="post-footer">
+          <div class="post-stats">
+            <span><strong data-like-count>{{.LikesCount}}</strong> likes</span>
+            <span><strong>{{.CommentsCount}}</strong> commentaires</span>
+          </div>
+          <div class="post-actions">
+            <button class="button icon like-button" type="button" data-like-button data-post-id="{{.ID}}">
+              <span data-like-label>Like</span>
+            </button>
+            <a class="round-action" href="/posts/{{.ID}}">C</a>
+            <button class="round-action" type="button">↗</button>
+            <a class="button primary" href="/posts/{{.ID}}">Voir le post</a>
+          </div>
+        </div>
+      </article>
+      {{else}}
+      <div class="empty-state">
+        <h2>Aucun post pour le moment</h2>
+        <p>Publie le premier entraînement, conseil ou retour d’expérience.</p>
+      </div>
+      {{end}}
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <div class="panel">
+      <h2>Suggestions</h2>
+      <div class="suggestion-list">
+        {{range .Users}}
+        <div class="suggestion-item">
+          <div>
+            <strong>{{.Username}}</strong>
+            <button class="mini-button" type="button">Suivre</button>
+          </div>
+        </div>
+        {{end}}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Filtres</h2>
+      <form class="filter-form" method="GET" action="/">
+        <label>
+          Date
+          <select name="date">
+            <option value="">Toutes</option>
+            <option value="today">Aujourd’hui</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois-ci</option>
+          </select>
+        </label>
+        <label>
+          Likes minimum
+          <input type="number" name="likes" min="0" placeholder="0">
+        </label>
+        <label>
+          Commentaires minimum
+          <input type="number" name="comments" min="0" placeholder="0">
+        </label>
+        <button class="button primary full" type="submit">Filtrer</button>
+      </form>
+    </div>
+  </aside>
+</section>
+{{end}}

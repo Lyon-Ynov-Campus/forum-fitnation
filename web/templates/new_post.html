@@ -1,0 +1,46 @@
+{{define "title"}}Nouveau post | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell form-page">
+  <div class="card editor-card">
+    <div class="section-title editor-title">
+      <h1>Nouveau post</h1>
+      <button class="button primary" type="submit" form="new-post-form">Publier</button>
+    </div>
+
+    <form id="new-post-form" class="form" method="POST" action="/posts/create">
+      <label>
+        Titre
+        <input type="text" name="title" maxlength="120" required>
+      </label>
+      <label>
+        Description
+        <textarea name="content" rows="10" required></textarea>
+      </label>
+      <label>
+        Image
+        <input type="url" name="image_url" placeholder="Lien de l'image">
+      </label>
+      <div class="form-block">
+        <span>Tags</span>
+        <input type="hidden" name="tags" data-tags-input>
+        <div class="tag-row selectable">
+          <button type="button" data-tag-option="Musculation">Musculation</button>
+          <button type="button" data-tag-option="Cardio">Cardio</button>
+          <button type="button" data-tag-option="Nutrition">Nutrition</button>
+        </div>
+        <div class="tag-add">
+          <input type="text" data-new-tag placeholder="Ajouter un tag">
+          <button class="button soft" type="button" data-add-tag>Ajouter</button>
+        </div>
+        <p class="selected-tags" data-selected-tags>Aucun tag sélectionné</p>
+      </div>
+      <p>Visibilité : public</p>
+      <div class="draft-line">
+        <span></span>
+      </div>
+      <p class="draft-text">Brouillon enregistré</p>
+    </form>
+  </div>
+</section>
+{{end}}

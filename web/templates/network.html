@@ -1,0 +1,41 @@
+{{define "title"}}Réseau | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Communauté</p>
+      <h1>Réseau FITNATION</h1>
+    </div>
+  </div>
+
+  <div class="tools-bar">
+    <label class="search-field">
+      <span>Rechercher un membre</span>
+      <input type="search" data-search-input data-search-target=".member-card" placeholder="Pseudo ou description">
+    </label>
+  </div>
+
+  <div class="member-grid">
+    {{range .Users}}
+    <article class="card member-card" data-search-text="{{.Username}} {{.Bio}}">
+      <img class="member-photo" src="{{.AvatarURL}}" alt="Photo de {{.Username}}">
+      <div class="member-body">
+        <h2>{{.Username}}</h2>
+        <p>{{.Bio}}</p>
+        <span>{{.PostsCount}} posts</span>
+      </div>
+      <div class="member-actions">
+        <a class="button primary" href="/users/{{.ID}}">Voir profil</a>
+        <button class="button soft follow-button" type="button">Suivre</button>
+      </div>
+    </article>
+    {{else}}
+    <div class="empty-state">
+      <h2>Aucun membre trouvé</h2>
+      <p>Les profils apparaîtront ici quand la communauté grandira.</p>
+    </div>
+    {{end}}
+  </div>
+</section>
+{{end}}

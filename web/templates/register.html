@@ -1,0 +1,39 @@
+{{define "title"}}Inscription | FITNATION{{end}}
+
+{{define "content"}}
+<section class="auth-page">
+  <div class="auth-card wide">
+    <div class="auth-header">
+      <span class="brand-mark">FN</span>
+      <h1>Créer un compte</h1>
+      <p>Rejoins FITNATION et partage ta progression.</p>
+    </div>
+
+    <form class="form two-columns" method="POST" action="/register">
+      <label>
+        Nom complet
+        <input type="text" name="full_name" autocomplete="name" required>
+      </label>
+      <label>
+        Email
+        <input type="email" name="email" autocomplete="email" required>
+      </label>
+      <label>
+        Pseudo
+        <input type="text" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        Mot de passe
+        <input type="password" name="password" autocomplete="new-password" required>
+      </label>
+      <label class="span-two">
+        Confirmation du mot de passe
+        <input type="password" name="password_confirm" autocomplete="new-password" required>
+      </label>
+      <button class="button primary full span-two" type="submit">Créer mon compte</button>
+    </form>
+
+    <p class="auth-link">Déjà inscrit ? <a href="/login">Se connecter</a></p>
+  </div>
+</section>
+{{end}}

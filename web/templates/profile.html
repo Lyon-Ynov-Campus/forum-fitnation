@@ -1,0 +1,93 @@
+{{define "title"}}Profil | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell profile-page">
+  <section class="profile-hero card">
+    <div class="profile-topline">
+      <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de profil de {{.User.Username}}">
+      <div>
+        <h1>{{.User.Username}}</h1>
+        <p>{{.User.Email}}</p>
+      </div>
+      <a class="round-action settings-action" href="/profile">•••</a>
+    </div>
+
+    <div class="profile-stats">
+      <div>
+        <strong>{{.Stats.PostsCount}}</strong>
+        <span>Posts</span>
+      </div>
+      <div>
+        <strong>{{.Stats.CommentsCount}}</strong>
+        <span>Commentaires</span>
+      </div>
+      <div>
+        <strong>{{.Stats.LikesReceived}}</strong>
+        <span>Likes reçus</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-column">
+    <div class="card">
+      <h2>Modifier le profil</h2>
+      <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
+        <label>
+          Pseudo
+          <input type="text" name="username" value="{{.User.Username}}" required>
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" value="{{.User.Email}}" required>
+        </label>
+        <label>
+          Nouveau mot de passe
+          <input type="password" name="password" autocomplete="new-password">
+        </label>
+        <label>
+          Photo de profil
+          <input type="file" name="avatar" accept="image/*">
+        </label>
+        <button class="button primary span-two" type="submit">Enregistrer</button>
+      </form>
+    </div>
+
+    <div class="section-title">
+      <h2>Mes posts</h2>
+    </div>
+
+    <div class="post-list compact">
+      {{range .Posts}}
+      <article class="card post-card" data-search-text="{{.Title}}">
+        <div class="post-meta">
+          <span>{{.CreatedAt}}</span>
+        </div>
+        <h2>{{.Title}}</h2>
+        <p>{{.Content}}</p>
+        <div class="post-footer">
+          <div class="post-stats">
+            <span>{{.LikesCount}} likes</span>
+            <span>{{.CommentsCount}} commentaires</span>
+          </div>
+          <div class="post-actions">
+            <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
+            <form method="POST" action="/posts/{{.ID}}/delete">
+              <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+            </form>
+          </div>
+        </div>
+      </article>
+      {{else}}
+      <div class="empty-state">
+        <h2>Aucun post publié</h2>
+        <p>Ton prochain post apparaîtra ici.</p>
+      </div>
+      {{end}}
+    </div>
+
+    <form method="POST" action="/profile/delete" class="danger-zone">
+      <button class="button danger full" type="submit" data-confirm="Supprimer définitivement votre compte ?">Supprimer le compte</button>
+    </form>
+  </section>
+</section>
+{{end}}
