@@ -4,12 +4,11 @@
 <section class="page-shell profile-page">
   <section class="profile-hero card">
     <div class="profile-topline">
-      <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de profil de {{.User.Username}}">
+      <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de {{.User.Username}}">
       <div>
         <h1>{{.User.Username}}</h1>
         <p>{{.User.Email}}</p>
       </div>
-      <a class="round-action settings-action" href="/profile">•••</a>
     </div>
 
     <div class="profile-stats">
@@ -23,14 +22,14 @@
       </div>
       <div>
         <strong>{{.Stats.LikesReceived}}</strong>
-        <span>Likes reçus</span>
+        <span>Likes re&#231;us</span>
       </div>
     </div>
   </section>
 
   <section class="content-column">
-    <div class="card">
-      <h2>Modifier le profil</h2>
+    <div class="card" style="margin-bottom: 24px;">
+      <h2 style="margin-bottom: 20px;">Modifier le profil</h2>
       <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
         <label>
           Pseudo
@@ -42,7 +41,7 @@
         </label>
         <label>
           Nouveau mot de passe
-          <input type="password" name="password" autocomplete="new-password">
+          <input type="password" name="password" autocomplete="new-password" placeholder="Laisser vide pour ne pas changer">
         </label>
         <label>
           Photo de profil
@@ -60,9 +59,12 @@
       {{range .Posts}}
       <article class="card post-card" data-search-text="{{.Title}}">
         <div class="post-meta">
-          <span>{{.CreatedAt}}</span>
+          <span class="avatar small">FN</span>
+          <div>
+            <strong>{{.Title}}</strong>
+            <span>{{.CreatedAt}}</span>
+          </div>
         </div>
-        <h2>{{.Title}}</h2>
         <p>{{.Content}}</p>
         <div class="post-footer">
           <div class="post-stats">
@@ -71,7 +73,7 @@
           </div>
           <div class="post-actions">
             <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
-            <form method="POST" action="/posts/{{.ID}}/delete">
+            <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline;">
               <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
             </form>
           </div>
@@ -79,14 +81,14 @@
       </article>
       {{else}}
       <div class="empty-state">
-        <h2>Aucun post publié</h2>
-        <p>Ton prochain post apparaîtra ici.</p>
+        <h2>Aucun post publi&#233;</h2>
+        <p>Ton prochain post appara&#238;tra ici.</p>
       </div>
       {{end}}
     </div>
 
     <form method="POST" action="/profile/delete" class="danger-zone">
-      <button class="button danger full" type="submit" data-confirm="Supprimer définitivement votre compte ?">Supprimer le compte</button>
+      <button class="button danger full" type="submit" data-confirm="Supprimer d&#233;finitivement votre compte ?">Supprimer le compte</button>
     </form>
   </section>
 </section>

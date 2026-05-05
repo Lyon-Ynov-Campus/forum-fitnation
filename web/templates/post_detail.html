@@ -1,7 +1,7 @@
 {{define "title"}}{{.Post.Title}} | FITNATION{{end}}
 
 {{define "content"}}
-<section class="page-shell post-detail-layout">
+<section class="page-shell" style="max-width: 800px;">
   <article class="card post-detail">
     <div class="post-meta">
       <span class="avatar small">FN</span>
@@ -12,7 +12,18 @@
     </div>
 
     <h1>{{.Post.Title}}</h1>
-    <div class="post-content">{{.Post.Content}}</div>
+
+    {{if .Post.ImageURL}}
+    <img class="post-image" src="{{.Post.ImageURL}}" alt="{{.Post.Title}}">
+    {{end}}
+
+    <div class="post-content" style="margin: 20px 0; white-space: pre-wrap;">{{.Post.Content}}</div>
+
+    {{if .Post.Tags}}
+    <div class="tag-row">
+      {{range .Post.Tags}}<span>{{.}}</span>{{end}}
+    </div>
+    {{end}}
 
     <div class="post-footer">
       <div class="post-stats">
@@ -20,30 +31,34 @@
         <span>{{.Post.CommentsCount}} commentaires</span>
       </div>
       <div class="post-actions owner-actions">
-        <button class="button icon like-button" type="button" data-like-button data-post-id="{{.Post.ID}}">
-          <span data-like-label>Like</span>
+        <button class="button icon like-button{{if .Post.Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.Post.ID}}">
+          <span data-like-label>{{if .Post.Liked}}Lik&#233;{{else}}Like{{end}}</span>
         </button>
-        <a class="button soft owner-only" href="/posts/{{.Post.ID}}/edit">Modifier</a>
-        <form class="owner-only" method="POST" action="/posts/{{.Post.ID}}/delete">
+        {{if .CurrentUser}}
+        <a class="button soft" href="/posts/{{.Post.ID}}/edit">Modifier</a>
+        <form method="POST" action="/posts/{{.Post.ID}}/delete" style="display:inline;">
           <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
         </form>
+        {{end}}
       </div>
     </div>
   </article>
 
-  <section class="comments-section">
+  <section class="comments-section" style="margin-top: 24px;">
     <div class="section-title">
       <h2>Commentaires</h2>
     </div>
 
+    {{if .CurrentUser}}
     <form class="card form comment-form" method="POST" action="/api/comments/create">
       <input type="hidden" name="post_id" value="{{.Post.ID}}">
       <label>
         Ajouter un commentaire
-        <textarea name="content" rows="4" required></textarea>
+        <textarea name="content" rows="3" required placeholder="Partage ton avis..."></textarea>
       </label>
       <button class="button primary" type="submit">Commenter</button>
     </form>
+    {{end}}
 
     <div class="comment-list">
       {{range .Comments}}
@@ -56,17 +71,16 @@
           </div>
         </div>
         <p>{{.Content}}</p>
-        <div class="comment-actions owner-only">
-          <a class="button soft" href="/comments/{{.ID}}/edit">Modifier</a>
-          <form method="POST" action="/api/comments/{{.ID}}/delete">
-            <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?">Supprimer</button>
+        <div class="comment-actions" style="margin-top: 10px;">
+          <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
+            <button class="button soft" type="submit" data-confirm="Supprimer ce commentaire ?" style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
           </form>
         </div>
       </article>
       {{else}}
       <div class="empty-state">
         <h2>Aucun commentaire</h2>
-        <p>Sois le premier à réagir.</p>
+        <p>Sois le premier &#224; r&#233;agir.</p>
       </div>
       {{end}}
     </div>

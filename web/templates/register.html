@@ -1,39 +1,39 @@
 {{define "title"}}Inscription | FITNATION{{end}}
 
 {{define "content"}}
-<section class="auth-page">
+<section class="auth-page" style="max-width: 560px;">
   <div class="auth-card wide">
     <div class="auth-header">
       <span class="brand-mark">FN</span>
-      <h1>Créer un compte</h1>
-      <p>Rejoins FITNATION et partage ta progression.</p>
+      <h1>Rejoins FITNATION</h1>
+      <p>Cr&#233;e ton compte et partage ta progression.</p>
     </div>
 
     <form class="form two-columns" method="POST" action="/register">
       <label>
         Nom complet
-        <input type="text" name="full_name" autocomplete="name" required>
+        <input type="text" name="full_name" autocomplete="name" required placeholder="Jean Dupont">
       </label>
       <label>
         Email
-        <input type="email" name="email" autocomplete="email" required>
+        <input type="email" name="email" autocomplete="email" required placeholder="jean@email.com">
       </label>
       <label>
         Pseudo
-        <input type="text" name="username" autocomplete="username" required>
+        <input type="text" name="username" autocomplete="username" required placeholder="@jean_fit">
       </label>
       <label>
         Mot de passe
-        <input type="password" name="password" autocomplete="new-password" required>
+        <input type="password" name="password" autocomplete="new-password" required placeholder="8 caract&#232;res minimum">
       </label>
       <label class="span-two">
-        Confirmation du mot de passe
-        <input type="password" name="password_confirm" autocomplete="new-password" required>
+        Confirmation
+        <input type="password" name="password_confirm" autocomplete="new-password" required placeholder="R&#233;p&#233;ter le mot de passe">
       </label>
-      <button class="button primary full span-two" type="submit">Créer mon compte</button>
+      <button class="button primary full span-two" type="submit">Cr&#233;er mon compte</button>
     </form>
 
-    <p class="auth-link">Déjà inscrit ? <a href="/login">Se connecter</a></p>
+    <p class="auth-link">D&#233;j&#224; inscrit ? <a href="/login">Se connecter</a></p>
   </div>
 </section>
 {{end}}
