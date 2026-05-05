@@ -5,28 +5,25 @@
   <div class="auth-card">
     <div class="auth-header">
       <span class="brand-mark">FN</span>
-      <h1>Connexion</h1>
-      <p>Retrouve ton feed, tes posts et ta communauté.</p>
+      <h1>Content de te revoir</h1>
+      <p>Retrouve ton feed et ta communaut&#233;.</p>
     </div>
 
     <form class="form" method="POST" action="/login">
       <label>
-        Pseudo
-        <input type="text" name="username" autocomplete="username">
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" autocomplete="email">
+        Pseudo ou email
+        <input type="text" name="username" autocomplete="username" placeholder="ton pseudo ou email">
       </label>
       <label>
         Mot de passe
-        <input type="password" name="password" autocomplete="current-password" required>
+        <input type="password" name="password" autocomplete="current-password" required placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
       </label>
       <button class="button primary full" type="submit">Se connecter</button>
     </form>
 
-    <p class="auth-link"><a href="/forgot-password">Mot de passe oublié ?</a></p>
-    <p class="auth-link">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
+    <p class="auth-link"><a href="/forgot-password">Mot de passe oubli&#233; ?</a></p>
+    <div class="auth-separator">ou</div>
+    <p class="auth-link">Pas encore de compte ? <a href="/register">Cr&#233;er un compte</a></p>
   </div>
 </section>
 {{end}}
