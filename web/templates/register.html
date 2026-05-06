@@ -2,38 +2,27 @@
 
 {{define "content"}}
 <section class="auth-page">
-  <div class="auth-card wide">
-    <div class="auth-header">
-      <span class="brand-mark">FN</span>
-      <h1>Créer un compte</h1>
-      <p>Rejoins FITNATION et partage ta progression.</p>
+  <div class="form-container">
+    <div class="form-header">
+      <h3>Sign Up</h3>
     </div>
 
-    <form class="form two-columns" method="POST" action="/register">
-      <label>
-        Nom complet
-        <input type="text" name="full_name" autocomplete="name" required>
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" autocomplete="email" required>
-      </label>
-      <label>
-        Pseudo
-        <input type="text" name="username" autocomplete="username" required>
-      </label>
-      <label>
-        Mot de passe
-        <input type="password" name="password" autocomplete="new-password" required>
-      </label>
-      <label class="span-two">
-        Confirmation du mot de passe
-        <input type="password" name="password_confirm" autocomplete="new-password" required>
-      </label>
-      <button class="button primary full span-two" type="submit">Créer mon compte</button>
+    <form class="form" method="POST" action="/register">
+      <div class="input-container">
+        <input type="text" name="full_name" placeholder="Nom complet" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="username" placeholder="Pseudo" required>
+        <input type="password" name="password" placeholder="Mot de passe" required>
+        <input type="password" name="password_confirm" placeholder="Confirmer le mot de passe" required>
+      </div>
+      <div class="button">
+        <button class="submit" type="submit">SIGN UP</button>
+      </div>
     </form>
 
-    <p class="auth-link">Déjà inscrit ? <a href="/login">Se connecter</a></p>
+    <div class="signup">
+      Déjà inscrit ? <a href="/login">Se connecter</a>
+    </div>
   </div>
 </section>
 {{end}}

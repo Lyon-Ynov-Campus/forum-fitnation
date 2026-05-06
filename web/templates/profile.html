@@ -9,7 +9,6 @@
         <h1>{{.User.Username}}</h1>
         <p>{{.User.Email}}</p>
       </div>
-      <a class="round-action settings-action" href="/profile">•••</a>
     </div>
 
     <div class="profile-stats">
@@ -31,62 +30,62 @@
   <section class="content-column">
     <div class="card">
       <h2>Modifier le profil</h2>
-      <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
-        <label>
-          Pseudo
-          <input type="text" name="username" value="{{.User.Username}}" required>
-        </label>
-        <label>
-          Email
-          <input type="email" name="email" value="{{.User.Email}}" required>
-        </label>
-        <label>
-          Nouveau mot de passe
-          <input type="password" name="password" autocomplete="new-password">
-        </label>
-        <label>
-          Photo de profil
+      <form class="form" method="POST" action="/profile/update" enctype="multipart/form-data">
+        <div class="input-container">
+          <input type="text" name="username" value="{{.User.Username}}" placeholder="Pseudo" required>
+          <input type="email" name="email" value="{{.User.Email}}" placeholder="Email" required>
+          <input type="password" name="password" placeholder="Nouveau mot de passe">
           <input type="file" name="avatar" accept="image/*">
-        </label>
-        <button class="button primary span-two" type="submit">Enregistrer</button>
+        </div>
+        <div class="button">
+          <button class="submit" type="submit">Enregistrer</button>
+        </div>
       </form>
     </div>
 
-    <div class="section-title">
-      <h2>Mes posts</h2>
+    <div class="profile-tabs">
+      <button class="tab-btn active" onclick="showTab('posts')">Mes posts</button>
+      <button class="tab-btn" onclick="showTab('comments')">Mes commentaires</button>
     </div>
 
-    <div class="post-list compact">
+    <div id="tab-posts">
       {{range .Posts}}
-      <article class="card post-card" data-search-text="{{.Title}}">
-        <div class="post-meta">
-          <span>{{.CreatedAt}}</span>
-        </div>
-        <h2>{{.Title}}</h2>
-        <p>{{.Content}}</p>
-        <div class="post-footer">
-          <div class="post-stats">
-            <span>{{.LikesCount}} likes</span>
-            <span>{{.CommentsCount}} commentaires</span>
-          </div>
-          <div class="post-actions">
-            <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
-            <form method="POST" action="/posts/{{.ID}}/delete">
-              <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+      <div class="post">
+        <div class="vote">{{.LikesCount}}</div>
+        <div class="post-content">
+          <div class="post-header">{{.CreatedAt}}</div>
+          <h3 class="post-title">{{.Title}}</h3>
+          <p class="post-text">{{.Content}}</p>
+          <div class="comment-actions">
+            <a href="/posts/{{.ID}}/edit"><button class="edit-btn">Modifier</button></a>
+            <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline">
+              <button class="delete-btn" type="submit">Supprimer</button>
             </form>
           </div>
         </div>
-      </article>
-      {{else}}
-      <div class="empty-state">
-        <h2>Aucun post publié</h2>
-        <p>Ton prochain post apparaîtra ici.</p>
       </div>
+      {{else}}
+      <p>Aucun post publié.</p>
       {{end}}
     </div>
 
-    <form method="POST" action="/profile/delete" class="danger-zone">
-      <button class="button danger full" type="submit" data-confirm="Supprimer définitivement votre compte ?">Supprimer le compte</button>
+    <div id="tab-comments" style="display:none">
+      {{range .Comments}}
+      <div class="comment">
+        <p class="post-header">{{.CreatedAt}}</p>
+        <p class="post-text">{{.Content}}</p>
+        <div class="comment-actions">
+          <button class="edit-btn">Modifier</button>
+          <button class="delete-btn">Supprimer</button>
+        </div>
+      </div>
+      {{else}}
+      <p>Aucun commentaire.</p>
+      {{end}}
+    </div>
+
+    <form method="POST" action="/profile/delete" style="margin-top:20px">
+      <button class="delete-btn" type="submit">Supprimer le compte</button>
     </form>
   </section>
 </section>

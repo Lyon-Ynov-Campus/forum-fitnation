@@ -20,12 +20,12 @@
         <span>{{.Post.CommentsCount}} commentaires</span>
       </div>
       <div class="post-actions owner-actions">
-        <button class="button icon like-button" type="button" data-like-button data-post-id="{{.Post.ID}}">
-          <span data-like-label>Like</span>
+        <button class="like-btn" type="button" data-like-button data-post-id="{{.Post.ID}}">
+          <span data-like-label>❤️ Like</span>
         </button>
-        <a class="button soft owner-only" href="/posts/{{.Post.ID}}/edit">Modifier</a>
-        <form class="owner-only" method="POST" action="/posts/{{.Post.ID}}/delete">
-          <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+        <a class="edit-btn owner-only" href="/posts/{{.Post.ID}}/edit">Modifier</a>
+        <form class="owner-only" method="POST" action="/posts/{{.Post.ID}}/delete" style="display:inline">
+          <button class="delete-btn" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
         </form>
       </div>
     </div>
@@ -36,18 +36,19 @@
       <h2>Commentaires</h2>
     </div>
 
-    <form class="card form comment-form" method="POST" action="/api/comments/create">
+    <form class="comment-form" method="POST" action="/api/comments/create">
       <input type="hidden" name="post_id" value="{{.Post.ID}}">
-      <label>
-        Ajouter un commentaire
-        <textarea name="content" rows="4" required></textarea>
-      </label>
-      <button class="button primary" type="submit">Commenter</button>
+      <div class="input-container">
+        <textarea name="content" rows="4" placeholder="Ajouter un commentaire" required></textarea>
+      </div>
+      <div class="button">
+        <button class="submit" type="submit">Commenter</button>
+      </div>
     </form>
 
     <div class="comment-list">
       {{range .Comments}}
-      <article class="card comment-card">
+      <article class="comment">
         <div class="post-meta">
           <span class="avatar small">FN</span>
           <div>
@@ -55,11 +56,11 @@
             <span>{{.CreatedAt}}</span>
           </div>
         </div>
-        <p>{{.Content}}</p>
+        <p class="post-text">{{.Content}}</p>
         <div class="comment-actions owner-only">
-          <a class="button soft" href="/comments/{{.ID}}/edit">Modifier</a>
-          <form method="POST" action="/api/comments/{{.ID}}/delete">
-            <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?">Supprimer</button>
+          <a href="/comments/{{.ID}}/edit"><button class="edit-btn">Modifier</button></a>
+          <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline">
+            <button class="delete-btn" type="submit" data-confirm="Supprimer ce commentaire ?">Supprimer</button>
           </form>
         </div>
       </article>

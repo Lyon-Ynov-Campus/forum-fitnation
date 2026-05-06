@@ -2,31 +2,25 @@
 
 {{define "content"}}
 <section class="auth-page">
-  <div class="auth-card">
-    <div class="auth-header">
-      <span class="brand-mark">FN</span>
-      <h1>Connexion</h1>
-      <p>Retrouve ton feed, tes posts et ta communauté.</p>
+  <div class="form-container">
+    <div class="form-header">
+      <h3>Login</h3>
     </div>
 
-    <form class="form" method="POST" action="/login">
-      <label>
-        Pseudo
-        <input type="text" name="username" autocomplete="username">
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" autocomplete="email">
-      </label>
-      <label>
-        Mot de passe
-        <input type="password" name="password" autocomplete="current-password" required>
-      </label>
-      <button class="button primary full" type="submit">Se connecter</button>
+    <form action="/login" method="POST">
+      <div class="input-container">
+        <input type="text" name="username" placeholder="Email ou pseudo" required />
+        <input type="password" name="password" placeholder="Mot de passe" required />
+      </div>
+
+      <div class="button">
+        <button class="submit" type="submit">LOG IN</button>
+      </div>
     </form>
 
-    <p class="auth-link"><a href="/forgot-password">Mot de passe oublié ?</a></p>
-    <p class="auth-link">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
+    <div class="signup">
+      Pas de compte ? <a href="/register">S'inscrire</a>
+    </div>
   </div>
 </section>
 {{end}}

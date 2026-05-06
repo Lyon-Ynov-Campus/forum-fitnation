@@ -4,13 +4,13 @@
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  color: #111111;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #0d0d0d;
+  color: #f0f0f0;
 }
 
 a {
-  color: #111111;
+  color: #f0f0f0;
   text-decoration: none;
 }
 
@@ -19,8 +19,8 @@ img {
 }
 
 .site-header {
-  background: #ffffff;
-  border-bottom: 1px solid #cccccc;
+  background: #1a1a1a;
+  border-bottom: 1px solid #00ff88;
 }
 
 .nav {
@@ -39,7 +39,7 @@ img {
   gap: 8px;
   font-size: 22px;
   font-weight: bold;
-  color: green;
+  color: #00ff88;
 }
 
 .brand-mark {
@@ -48,9 +48,11 @@ img {
   justify-content: center;
   width: 38px;
   height: 38px;
-  background: green;
-  color: white;
+  background: #00ff88;
+  color: #0d0d0d;
   font-size: 14px;
+  font-weight: bold;
+  border-radius: 10px;
 }
 
 .nav-links {
@@ -61,6 +63,12 @@ img {
 
 .nav-links a {
   padding: 6px 0;
+  color: #f0f0f0;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #00ff88;
 }
 
 .logout-form {
@@ -71,9 +79,14 @@ img {
   padding: 6px 0;
   border: none;
   background: none;
-  color: #111111;
+  color: #f0f0f0;
   cursor: pointer;
   font: inherit;
+  transition: color 0.2s;
+}
+
+.logout-form button:hover {
+  color: #00ff88;
 }
 
 .nav-toggle,
@@ -110,8 +123,9 @@ img {
 .profile-card,
 .editor-card,
 .empty-state {
-  background: #ffffff;
-  border: 1px solid #cccccc;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
   padding: 15px;
 }
 
@@ -127,29 +141,29 @@ img {
   margin-bottom: 15px;
 }
 
-h1,
-h2,
-h3,
-p {
+h1, h2, h3, p {
   margin-top: 0;
 }
 
 h1 {
   font-size: 28px;
+  color: #ffffff;
 }
 
 h2 {
   font-size: 20px;
+  color: #ffffff;
 }
 
 p {
   line-height: 1.5;
+  color: #aaaaaa;
 }
 
 .eyebrow {
   font-size: 13px;
   font-weight: bold;
-  color: green;
+  color: #00ff88;
   margin-bottom: 5px;
 }
 
@@ -183,31 +197,50 @@ p {
 .attachment-bar button,
 .tag-row button {
   display: inline-block;
-  padding: 9px 12px;
-  border: 1px solid #999999;
-  background: #eeeeee;
-  color: #111111;
+  padding: 9px 16px;
+  border: 1px solid #333333;
+  background: #2a2a2a;
+  color: #f0f0f0;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.tab:hover,
+.button:hover,
+.round-action:hover {
+  border-color: #00ff88;
+  color: #00ff88;
 }
 
 .button.primary,
 .tab.is-active,
 .mini-button {
-  background: green;
-  color: white;
-  border-color: green;
+  background: #00ff88;
+  color: #0d0d0d;
+  border-color: #00ff88;
+  font-weight: 700;
+}
+
+.button.primary:hover {
+  background: #00cc6a;
+  border-color: #00cc6a;
 }
 
 .button.soft {
-  background: #eeeeee;
-  color: #111111;
+  background: #2a2a2a;
+  color: #f0f0f0;
 }
 
 .button.danger {
-  background: #b00020;
+  background: #ff4444;
   color: white;
-  border-color: #b00020;
+  border-color: #ff4444;
+}
+
+.button.danger:hover {
+  background: #cc0000;
 }
 
 .button.full {
@@ -215,14 +248,16 @@ p {
 }
 
 .like-button.is-liked {
-  background: #111111;
-  color: white;
+  background: #00ff88;
+  color: #0d0d0d;
+  border-color: #00ff88;
 }
 
 label {
   display: block;
   margin-bottom: 12px;
   font-weight: bold;
+  color: #f0f0f0;
 }
 
 input,
@@ -231,13 +266,24 @@ select {
   width: 100%;
   padding: 10px;
   margin-top: 6px;
-  border: 1px solid #999999;
-  background: #ffffff;
+  border: 1px solid #333333;
+  background: #2a2a2a;
+  color: #f0f0f0;
   font: inherit;
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.2s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #00ff88;
 }
 
 textarea {
   min-height: 120px;
+  resize: vertical;
 }
 
 .form,
@@ -263,6 +309,7 @@ textarea {
 .search-field span {
   display: block;
   font-weight: bold;
+  color: #f0f0f0;
 }
 
 .post-list,
@@ -276,9 +323,17 @@ textarea {
 .comment-card,
 .member-card,
 .post-detail {
-  background: #ffffff;
-  border: 1px solid #cccccc;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
   padding: 15px;
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.post-card:hover,
+.comment-card:hover,
+.member-card:hover {
+  border-color: #00ff88;
 }
 
 .post-meta {
@@ -291,7 +346,7 @@ textarea {
 }
 
 .post-meta strong {
-  color: #111111;
+  color: #f0f0f0;
   font-size: 15px;
 }
 
@@ -301,25 +356,28 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #dddddd;
-  border: 1px solid #999999;
-  color: #111111;
+  background: #00ff88;
+  color: #0d0d0d;
   font-weight: bold;
+  border-radius: 50%;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .tag-row span {
   display: inline-block;
-  border: 1px solid #cccccc;
-  background: #eeeeee;
-  padding: 5px 8px;
+  border: 1px solid #333333;
+  background: #2a2a2a;
+  padding: 5px 10px;
   font-size: 13px;
+  border-radius: 20px;
+  color: #f0f0f0;
 }
 
 .tag-row button.is-selected {
-  background: green;
-  color: white;
-  border-color: green;
+  background: #00ff88;
+  color: #0d0d0d;
+  border-color: #00ff88;
 }
 
 .tag-add {
@@ -342,7 +400,8 @@ textarea {
   display: block;
   max-width: 100%;
   margin-bottom: 12px;
-  border: 1px solid #cccccc;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
 }
 
 .post-image.large {
@@ -350,12 +409,13 @@ textarea {
 }
 
 .media-placeholder {
-  border: 1px solid #cccccc;
-  background: #f1f1f1;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
   color: #666666;
   padding: 30px;
   text-align: center;
   margin-bottom: 12px;
+  border-radius: 8px;
 }
 
 .media-placeholder.large {
@@ -363,7 +423,7 @@ textarea {
 }
 
 .post-footer {
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid #2a2a2a;
   padding-top: 12px;
   margin-top: 12px;
 }
@@ -402,7 +462,7 @@ textarea {
 }
 
 .auth-link a {
-  color: green;
+  color: #00ff88;
   font-weight: bold;
 }
 
@@ -418,14 +478,15 @@ textarea {
   width: 70px;
   height: 70px;
   object-fit: cover;
-  border: 1px solid #999999;
-  background: #dddddd;
+  border: 2px solid #00ff88;
+  background: #2a2a2a;
+  border-radius: 50%;
 }
 
 .profile-stats {
   display: flex;
   gap: 15px;
-  border-top: 1px solid #eeeeee;
+  border-top: 1px solid #2a2a2a;
   padding-top: 12px;
 }
 
@@ -436,6 +497,11 @@ textarea {
 .profile-stats strong,
 .profile-stats span {
   display: block;
+}
+
+.profile-stats strong {
+  color: #00ff88;
+  font-size: 1.2rem;
 }
 
 .profile-stats span {
@@ -473,14 +539,16 @@ textarea {
 
 .draft-line {
   height: 8px;
-  background: #dddddd;
+  background: #2a2a2a;
+  border-radius: 4px;
 }
 
 .draft-line span {
   display: block;
   width: 35%;
   height: 8px;
-  background: green;
+  background: #00ff88;
+  border-radius: 4px;
 }
 
 .draft-text {
@@ -494,6 +562,204 @@ textarea {
 
 .is-hidden {
   display: none;
+}
+
+/* Mes classes custom */
+.form-container {
+  background-color: #1a1a1a;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #00ff88;
+  margin: 0 auto;
+}
+
+.form-header h3 {
+  color: #00ff88;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-container input,
+.input-container textarea,
+.input-container select {
+  background-color: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  color: white;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border 0.2s;
+  margin-top: 0;
+}
+
+.input-container input:focus,
+.input-container textarea:focus {
+  border-color: #00ff88;
+}
+
+.submit {
+  background-color: #00ff88;
+  color: #0d0d0d;
+  border: none;
+  border-radius: 10px;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.submit:hover {
+  background-color: #00cc6a;
+}
+
+.signup {
+  text-align: center;
+  color: #888;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+.signup a {
+  color: #00ff88;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.signup a:hover {
+  text-decoration: underline;
+}
+
+.edit-btn {
+  background: none;
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover {
+  background: #00ff88;
+  color: #0d0d0d;
+}
+
+.delete-btn {
+  background: none;
+  border: 1px solid #ff4444;
+  color: #ff4444;
+  border-radius: 8px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  background: #ff4444;
+  color: white;
+}
+
+.like-btn {
+  background: none;
+  border: 1px solid #333;
+  border-radius: 20px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #f0f0f0;
+  transition: all 0.2s;
+}
+
+.like-btn:hover {
+  border-color: #00ff88;
+  color: #00ff88;
+}
+
+.like-btn.liked {
+  background: #00ff88;
+  border-color: #00ff88;
+  color: #0d0d0d;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #2a2a2a;
+  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #666666;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  color: #00ff88;
+  border-bottom-color: #00ff88;
+  font-weight: 600;
+}
+
+.comment-form {
+  margin-top: 20px;
+}
+
+.comment-form textarea {
+  width: 100%;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+  color: white;
+  font-size: 0.95rem;
+  min-height: 80px;
+  resize: vertical;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+.comment-form textarea:focus {
+  border-color: #00ff88;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #666666;
+}
+
+.empty-state h2 {
+  color: #666666;
+}
+
+.success {
+  color: #00ff88;
+  background: #0d2a1a;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 800px) {
@@ -511,7 +777,7 @@ textarea {
 
   .nav-links a {
     display: block;
-    border-top: 1px solid #eeeeee;
+    border-top: 1px solid #2a2a2a;
     padding: 8px 0;
   }
 

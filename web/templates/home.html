@@ -18,15 +18,15 @@
       </label>
 
       <div class="sort-actions" aria-label="Trier les posts">
-        <a class="button soft" href="/?sort=recent">Récent</a>
-        <a class="button soft" href="/?sort=likes">Plus liké</a>
-        <a class="button soft" href="/?sort=comments">Plus commenté</a>
+        <a class="edit-btn" href="/?sort=recent">Récent</a>
+        <a class="edit-btn" href="/?sort=likes">Plus liké</a>
+        <a class="edit-btn" href="/?sort=comments">Plus commenté</a>
       </div>
     </div>
 
     <div class="post-list">
       {{range .Posts}}
-      <article class="card post-card" data-search-text="{{.Title}}">
+      <article class="post" data-search-text="{{.Title}}">
         <div class="post-meta">
           <span class="avatar small">FN</span>
           <div>
@@ -35,8 +35,8 @@
           </div>
         </div>
 
-        <h2>{{.Title}}</h2>
-        <p>{{.Content}}</p>
+        <h2 class="post-title">{{.Title}}</h2>
+        <p class="post-text">{{.Content}}</p>
 
         <div class="post-footer">
           <div class="post-stats">
@@ -44,19 +44,17 @@
             <span><strong>{{.CommentsCount}}</strong> commentaires</span>
           </div>
           <div class="post-actions">
-            <button class="button icon like-button" type="button" data-like-button data-post-id="{{.ID}}">
-              <span data-like-label>Like</span>
+            <button class="like-btn" type="button" data-like-button data-post-id="{{.ID}}">
+              <span data-like-label>❤️ Like</span>
             </button>
-            <a class="round-action" href="/posts/{{.ID}}">C</a>
-            <button class="round-action" type="button">↗</button>
-            <a class="button primary" href="/posts/{{.ID}}">Voir le post</a>
+            <a class="edit-btn" href="/posts/{{.ID}}">Voir le post</a>
           </div>
         </div>
       </article>
       {{else}}
       <div class="empty-state">
         <h2>Aucun post pour le moment</h2>
-        <p>Publie le premier entraînement, conseil ou retour d’expérience.</p>
+        <p>Publie le premier entraînement, conseil ou retour d'expérience.</p>
       </div>
       {{end}}
     </div>
@@ -70,7 +68,7 @@
         <div class="suggestion-item">
           <div>
             <strong>{{.Username}}</strong>
-            <button class="mini-button" type="button">Suivre</button>
+            <button class="edit-btn" type="button">Suivre</button>
           </div>
         </div>
         {{end}}
@@ -80,24 +78,19 @@
     <div class="panel">
       <h2>Filtres</h2>
       <form class="filter-form" method="GET" action="/">
-        <label>
-          Date
+        <div class="input-container">
           <select name="date">
-            <option value="">Toutes</option>
-            <option value="today">Aujourd’hui</option>
+            <option value="">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
             <option value="week">Cette semaine</option>
             <option value="month">Ce mois-ci</option>
           </select>
-        </label>
-        <label>
-          Likes minimum
-          <input type="number" name="likes" min="0" placeholder="0">
-        </label>
-        <label>
-          Commentaires minimum
-          <input type="number" name="comments" min="0" placeholder="0">
-        </label>
-        <button class="button primary full" type="submit">Filtrer</button>
+          <input type="number" name="likes" min="0" placeholder="Likes minimum">
+          <input type="number" name="comments" min="0" placeholder="Commentaires minimum">
+        </div>
+        <div class="button">
+          <button class="submit" type="submit">Filtrer</button>
+        </div>
       </form>
     </div>
   </aside>
