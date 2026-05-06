@@ -62,6 +62,7 @@ func main() {
 	mux.HandleFunc("/api/posts/", app.likePost)
 	mux.HandleFunc("/api/comments/create", app.createComment)
 	mux.HandleFunc("/api/comments/", app.commentsRouter)
+	mux.HandleFunc("/admin", app.admin)
 
 	log.Println("FITNATION lancé sur http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", mux))
@@ -710,6 +711,36 @@ func (a *App) commentsRouter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectBack(w, r, "/")
+}
+
+func (a *App) admin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	user := a.requireUser(w, r)
+	if user == nil {
+		return
+	}
+
+	users, err := a.store.ListUsers()
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	posts, err := a.store.ListPosts(user.ID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	a.render(w, "admin.html", map[string]any{
+		"CurrentUser": user,
+		"Users":       users,
+		"Posts":       posts,
+	})
 }
 
 func (a *App) currentUser(r *http.Request) *models.User {
