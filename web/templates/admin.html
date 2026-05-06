@@ -1,0 +1,84 @@
+{{define "title"}}Admin | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell">
+  <h1>Panel Admin</h1>
+
+  <h2>Utilisateurs</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Utilisateur</th>
+        <th>Email</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Users}}
+      <tr>
+        <td>{{.Username}}</td>
+        <td>{{.Email}}</td>
+        <td><button class="delete-btn">Bannir</button></td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="3">Aucun utilisateur</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <h2>Posts</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Titre</th>
+        <th>Auteur</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Posts}}
+      <tr>
+        <td>{{.Title}}</td>
+        <td>{{.Author}}</td>
+        <td>{{.CreatedAt}}</td>
+        <td><button class="delete-btn">Supprimer</button></td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="4">Aucun post</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <h2>Commentaires</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Contenu</th>
+        <th>Auteur</th>
+        <th>Date</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Comments}}
+      <tr>
+        <td>{{.Content}}</td>
+        <td>{{.Author}}</td>
+        <td>{{.CreatedAt}}</td>
+        <td><button class="delete-btn">Supprimer</button></td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="4">Aucun commentaire</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+</section>
+{{end}}

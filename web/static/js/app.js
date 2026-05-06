@@ -56,7 +56,7 @@ function initLikes() {
             window.location.href = "/login";
             return null;
           }
-          if (!response.ok) throw new Error("Erreur");
+          if (!response.ok) throw new Error("Erreur serveur");
           return response.json();
         })
         .then(function (data) {
@@ -84,15 +84,40 @@ function updateLikeButton(button, data) {
 
   if (count && typeof data.likes_count !== "undefined") {
     animateCounter(count, parseInt(count.textContent) || 0, data.likes_count);
+    count.style.color = "#00ff88";
+    setTimeout(function () {
+      count.style.color = "";
+    }, 500);
   }
 
   if (label) {
-    label.textContent = liked ? "Lik\u00e9" : "Like";
+    label.textContent = liked ? "Liké" : "Like";
   }
 
   if (liked) {
     button.style.transform = "scale(1.15)";
     setTimeout(function () { button.style.transform = ""; }, 200);
+
+    var notification = document.createElement("div");
+    notification.textContent = "Post liké !";
+    notification.style.position = "fixed";
+    notification.style.bottom = "20px";
+    notification.style.right = "20px";
+    notification.style.background = "#00ff88";
+    notification.style.color = "#0d0d0d";
+    notification.style.padding = "10px 20px";
+    notification.style.borderRadius = "8px";
+    notification.style.fontWeight = "bold";
+    notification.style.zIndex = "999";
+    document.body.appendChild(notification);
+
+    setTimeout(function () {
+      notification.style.opacity = "0";
+      notification.style.transition = "opacity 0.3s";
+      setTimeout(function () {
+        notification.remove();
+      }, 300);
+    }, 2000);
   }
 }
 
@@ -124,7 +149,7 @@ function initSearch() {
         var query = normalize(input.value);
         var items = document.querySelectorAll(targetSelector);
 
-        items.forEach(function (item, index) {
+        items.forEach(function (item) {
           var text = normalize(item.dataset.searchText || item.textContent);
           var shouldHide = query !== "" && text.indexOf(query) === -1;
 
@@ -193,7 +218,7 @@ function initTags() {
         btn.classList.toggle("is-selected", tags.indexOf(btn.dataset.tagOption) !== -1);
       });
       if (label) {
-        label.textContent = tags.length ? "Tags : " + tags.join(", ") : "Aucun tag s\u00e9lectionn\u00e9";
+        label.textContent = tags.length ? "Tags : " + tags.join(", ") : "Aucun tag sélectionné";
       }
     }
 
