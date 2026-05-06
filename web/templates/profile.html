@@ -4,7 +4,7 @@
 <section class="page-shell profile-page">
   <section class="profile-hero card">
     <div class="profile-topline">
-      <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de profil de {{.User.Username}}">
+      <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de {{.User.Username}}">
       <div>
         <h1>{{.User.Username}}</h1>
         <p>{{.User.Email}}</p>
@@ -22,12 +22,13 @@
       </div>
       <div>
         <strong>{{.Stats.LikesReceived}}</strong>
-        <span>Likes reçus</span>
+        <span>Likes re&#231;us</span>
       </div>
     </div>
   </section>
 
   <section class="content-column">
+<<<<<<< HEAD
     <div class="card">
       <h2>Modifier le profil</h2>
       <form class="form" method="POST" action="/profile/update" enctype="multipart/form-data">
@@ -35,6 +36,25 @@
           <input type="text" name="username" value="{{.User.Username}}" placeholder="Pseudo" required>
           <input type="email" name="email" value="{{.User.Email}}" placeholder="Email" required>
           <input type="password" name="password" placeholder="Nouveau mot de passe">
+=======
+    <div class="card" style="margin-bottom: 24px;">
+      <h2 style="margin-bottom: 20px;">Modifier le profil</h2>
+      <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
+        <label>
+          Pseudo
+          <input type="text" name="username" value="{{.User.Username}}" required>
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" value="{{.User.Email}}" required>
+        </label>
+        <label>
+          Nouveau mot de passe
+          <input type="password" name="password" autocomplete="new-password" placeholder="Laisser vide pour ne pas changer">
+        </label>
+        <label>
+          Photo de profil
+>>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
           <input type="file" name="avatar" accept="image/*">
         </div>
         <div class="button">
@@ -50,6 +70,7 @@
 
     <div id="tab-posts">
       {{range .Posts}}
+<<<<<<< HEAD
       <div class="post">
         <div class="vote">{{.LikesCount}}</div>
         <div class="post-content">
@@ -63,12 +84,41 @@
             </form>
           </div>
         </div>
+=======
+      <article class="card post-card" data-search-text="{{.Title}}">
+        <div class="post-meta">
+          <span class="avatar small">FN</span>
+          <div>
+            <strong>{{.Title}}</strong>
+            <span>{{.CreatedAt}}</span>
+          </div>
+        </div>
+        <p>{{.Content}}</p>
+        <div class="post-footer">
+          <div class="post-stats">
+            <span>{{.LikesCount}} likes</span>
+            <span>{{.CommentsCount}} commentaires</span>
+          </div>
+          <div class="post-actions">
+            <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
+            <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline;">
+              <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+            </form>
+          </div>
+        </div>
+      </article>
+      {{else}}
+      <div class="empty-state">
+        <h2>Aucun post publi&#233;</h2>
+        <p>Ton prochain post appara&#238;tra ici.</p>
+>>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
       </div>
       {{else}}
       <p>Aucun post publié.</p>
       {{end}}
     </div>
 
+<<<<<<< HEAD
     <div id="tab-comments" style="display:none">
       {{range .Comments}}
       <div class="comment">
@@ -86,6 +136,10 @@
 
     <form method="POST" action="/profile/delete" style="margin-top:20px">
       <button class="delete-btn" type="submit">Supprimer le compte</button>
+=======
+    <form method="POST" action="/profile/delete" class="danger-zone">
+      <button class="button danger full" type="submit" data-confirm="Supprimer d&#233;finitivement votre compte ?">Supprimer le compte</button>
+>>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
     </form>
   </section>
 </section>

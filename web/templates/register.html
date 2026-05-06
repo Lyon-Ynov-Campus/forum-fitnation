@@ -1,6 +1,7 @@
 {{define "title"}}Inscription | FITNATION{{end}}
 
 {{define "content"}}
+<<<<<<< HEAD
 <section class="auth-page">
   <div class="form-container">
     <div class="form-header">
@@ -23,6 +24,41 @@
     <div class="signup">
       Déjà inscrit ? <a href="/login">Se connecter</a>
     </div>
+=======
+<section class="auth-page" style="max-width: 560px;">
+  <div class="auth-card wide">
+    <div class="auth-header">
+      <span class="brand-mark">FN</span>
+      <h1>Rejoins FITNATION</h1>
+      <p>Cr&#233;e ton compte et partage ta progression.</p>
+    </div>
+
+    <form class="form two-columns" method="POST" action="/register">
+      <label>
+        Nom complet
+        <input type="text" name="full_name" autocomplete="name" required placeholder="Jean Dupont">
+      </label>
+      <label>
+        Email
+        <input type="email" name="email" autocomplete="email" required placeholder="jean@email.com">
+      </label>
+      <label>
+        Pseudo
+        <input type="text" name="username" autocomplete="username" required placeholder="@jean_fit">
+      </label>
+      <label>
+        Mot de passe
+        <input type="password" name="password" autocomplete="new-password" required placeholder="8 caract&#232;res minimum">
+      </label>
+      <label class="span-two">
+        Confirmation
+        <input type="password" name="password_confirm" autocomplete="new-password" required placeholder="R&#233;p&#233;ter le mot de passe">
+      </label>
+      <button class="button primary full span-two" type="submit">Cr&#233;er mon compte</button>
+    </form>
+
+    <p class="auth-link">D&#233;j&#224; inscrit ? <a href="/login">Se connecter</a></p>
+>>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
   </div>
 </section>
 {{end}}

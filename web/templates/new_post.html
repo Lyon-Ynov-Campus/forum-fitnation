@@ -8,10 +8,27 @@
     </div>
 
     <form id="new-post-form" class="form" method="POST" action="/posts/create">
+<<<<<<< HEAD
       <div class="input-container">
         <input type="text" name="title" maxlength="120" placeholder="Titre" required>
         <textarea name="content" rows="10" placeholder="Description" required></textarea>
         <input type="url" name="image_url" placeholder="Lien de l'image">
+=======
+      <label>
+        Titre
+        <input type="text" name="title" maxlength="120" required placeholder="Titre de ton post">
+      </label>
+      <label>
+        Contenu
+        <textarea name="content" rows="10" required placeholder="Partage ton entra&#238;nement, conseil, ou retour d'exp&#233;rience..."></textarea>
+      </label>
+      <label>
+        Image (optionnel)
+        <input type="url" name="image_url" placeholder="https://exemple.com/image.jpg">
+      </label>
+      <div class="form-block">
+        <span>Tags</span>
+>>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
         <input type="hidden" name="tags" data-tags-input>
         <div class="tag-row">
           <button type="button" data-tag-option="Musculation">Musculation</button>
@@ -19,6 +36,7 @@
           <button type="button" data-tag-option="Nutrition">Nutrition</button>
         </div>
         <div class="tag-add">
+<<<<<<< HEAD
           <input type="text" data-new-tag placeholder="Ajouter un tag">
           <button class="edit-btn" type="button" data-add-tag>Ajouter</button>
         </div>
@@ -32,6 +50,18 @@
       <div class="button">
         <button class="submit" type="submit">Publier</button>
       </div>
+=======
+          <input type="text" data-new-tag placeholder="Tag personnalis&#233;...">
+          <button class="button soft" type="button" data-add-tag>Ajouter</button>
+        </div>
+        <p class="selected-tags" data-selected-tags>Aucun tag s&#233;lectionn&#233;</p>
+      </div>
+
+      <div class="draft-line">
+        <span></span>
+      </div>
+      <p class="draft-text">Brouillon auto-enregistr&#233;</p>
+>>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
     </form>
   </div>
 </section>

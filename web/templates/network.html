@@ -1,39 +1,36 @@
-{{define "title"}}Réseau | FITNATION{{end}}
+{{define "title"}}R&#233;seau | FITNATION{{end}}
 
 {{define "content"}}
 <section class="page-shell">
   <div class="page-heading">
-    <div>
-      <p class="eyebrow">Communauté</p>
-      <h1>Réseau FITNATION</h1>
-    </div>
+    <p class="eyebrow">Communaut&#233;</p>
+    <h1>R&#233;seau FITNATION</h1>
   </div>
 
   <div class="tools-bar">
     <label class="search-field">
       <span>Rechercher un membre</span>
-      <input type="search" data-search-input data-search-target=".member-card" placeholder="Pseudo ou description">
+      <input type="search" data-search-input data-search-target=".member-card" placeholder="Pseudo ou description...">
     </label>
   </div>
 
   <div class="member-grid">
     {{range .Users}}
     <article class="card member-card" data-search-text="{{.Username}} {{.Bio}}">
-      <img class="member-photo" src="{{.AvatarURL}}" alt="Photo de {{.Username}}">
+      <img class="member-photo" src="{{.AvatarURL}}" alt="{{.Username}}">
       <div class="member-body">
         <h2>{{.Username}}</h2>
         <p>{{.Bio}}</p>
         <span>{{.PostsCount}} posts</span>
       </div>
-      <div class="member-actions">
-        <a class="button primary" href="/users/{{.ID}}">Voir profil</a>
+      <div class="member-actions" style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
         <button class="button soft follow-button" type="button">Suivre</button>
       </div>
     </article>
     {{else}}
-    <div class="empty-state">
-      <h2>Aucun membre trouvé</h2>
-      <p>Les profils apparaîtront ici quand la communauté grandira.</p>
+    <div class="empty-state" style="grid-column: 1 / -1;">
+      <h2>Aucun membre trouv&#233;</h2>
+      <p>Les profils appara&#238;tront ici quand la communaut&#233; grandira.</p>
     </div>
     {{end}}
   </div>
