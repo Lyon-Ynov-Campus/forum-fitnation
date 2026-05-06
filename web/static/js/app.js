@@ -42,14 +42,16 @@ function initLikes() {
       var ripple = document.createElement("span");
       ripple.className = "ripple";
       var rect = button.getBoundingClientRect();
-      ripple.style.left = (e.clientX - rect.left - 10) + "px";
-      ripple.style.top = (e.clientY - rect.top - 10) + "px";
+      ripple.style.left = e.clientX - rect.left - 10 + "px";
+      ripple.style.top = e.clientY - rect.top - 10 + "px";
       button.appendChild(ripple);
-      setTimeout(function () { ripple.remove(); }, 600);
+      setTimeout(function () {
+        ripple.remove();
+      }, 600);
 
       fetch("/api/posts/" + postId + "/like", {
         method: "POST",
-        headers: { "Accept": "application/json" }
+        headers: { Accept: "application/json" },
       })
         .then(function (response) {
           if (response.status === 401) {
@@ -65,7 +67,9 @@ function initLikes() {
         })
         .catch(function () {
           button.classList.add("has-error");
-          setTimeout(function () { button.classList.remove("has-error"); }, 800);
+          setTimeout(function () {
+            button.classList.remove("has-error");
+          }, 800);
         })
         .finally(function () {
           button.disabled = false;
@@ -96,7 +100,9 @@ function updateLikeButton(button, data) {
 
   if (liked) {
     button.style.transform = "scale(1.15)";
-    setTimeout(function () { button.style.transform = ""; }, 200);
+    setTimeout(function () {
+      button.style.transform = "";
+    }, 200);
 
     var notification = document.createElement("div");
     notification.textContent = "Post liké !";
@@ -156,7 +162,9 @@ function initSearch() {
           if (shouldHide) {
             item.style.opacity = "0";
             item.style.transform = "scale(0.97)";
-            setTimeout(function () { item.classList.add("is-hidden"); }, 150);
+            setTimeout(function () {
+              item.classList.add("is-hidden");
+            }, 150);
           } else {
             item.classList.remove("is-hidden");
             item.style.opacity = "";
@@ -191,7 +199,9 @@ function initFollowButtons() {
       button.textContent = isFollowing ? "Suivi" : "Suivre";
 
       button.style.transform = "scale(0.92)";
-      setTimeout(function () { button.style.transform = ""; }, 150);
+      setTimeout(function () {
+        button.style.transform = "";
+      }, 150);
     });
   });
 }
@@ -209,16 +219,26 @@ function initTags() {
     if (!input) return;
 
     function getTags() {
-      return input.value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
+      return input.value
+        .split(",")
+        .map(function (t) {
+          return t.trim();
+        })
+        .filter(Boolean);
     }
 
     function setTags(tags) {
       input.value = tags.join(",");
       buttons.forEach(function (btn) {
-        btn.classList.toggle("is-selected", tags.indexOf(btn.dataset.tagOption) !== -1);
+        btn.classList.toggle(
+          "is-selected",
+          tags.indexOf(btn.dataset.tagOption) !== -1,
+        );
       });
       if (label) {
-        label.textContent = tags.length ? "Tags : " + tags.join(", ") : "Aucun tag sélectionné";
+        label.textContent = tags.length
+          ? "Tags : " + tags.join(", ")
+          : "Aucun tag sélectionné";
       }
     }
 
@@ -234,7 +254,9 @@ function initTags() {
       btn.addEventListener("click", function () {
         toggleTag(btn.dataset.tagOption);
         btn.style.transform = "scale(0.92)";
-        setTimeout(function () { btn.style.transform = ""; }, 150);
+        setTimeout(function () {
+          btn.style.transform = "";
+        }, 150);
       });
     });
 
@@ -263,22 +285,28 @@ function initTags() {
 function initScrollReveal() {
   if (!("IntersectionObserver" in window)) return;
 
-  var revealElements = document.querySelectorAll(".panel, .profile-hero, .comments-section, .member-card, .empty-state");
+  var revealElements = document.querySelectorAll(
+    ".panel, .profile-hero, .comments-section, .member-card, .empty-state",
+  );
 
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = "1";
-        entry.target.style.transform = "translateY(0)";
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+  var observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = "1";
+          entry.target.style.transform = "translateY(0)";
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+  );
 
   revealElements.forEach(function (el) {
     el.style.opacity = "0";
     el.style.transform = "translateY(12px)";
-    el.style.transition = "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
+    el.style.transition =
+      "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
     observer.observe(el);
   });
 }
@@ -288,19 +316,22 @@ function initSmoothCounters() {
 
   if (!("IntersectionObserver" in window) || !statElements.length) return;
 
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        var el = entry.target;
-        var target = parseInt(el.textContent) || 0;
-        if (target > 0) {
-          el.textContent = "0";
-          animateCounter(el, 0, target);
+  var observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var target = parseInt(el.textContent) || 0;
+          if (target > 0) {
+            el.textContent = "0";
+            animateCounter(el, 0, target);
+          }
+          observer.unobserve(el);
         }
-        observer.unobserve(el);
-      }
-    });
-  }, { threshold: 0.5 });
+      });
+    },
+    { threshold: 0.5 },
+  );
 
   statElements.forEach(function (el) {
     observer.observe(el);

@@ -5,28 +5,28 @@
   <section class="content-column">
     <div class="page-heading compact-heading">
       <div>
-        <p class="eyebrow">FITNATION</p>
+        <p class="eyebrow">Communaut&#233;</p>
         <h1>Feed</h1>
       </div>
-      <a class="button primary" href="/posts/new">Créer un post</a>
+      <a class="button primary" href="/posts/new">+ Nouveau post</a>
     </div>
 
     <div class="tools-bar">
       <label class="search-field">
         <span>Rechercher</span>
-        <input type="search" data-search-input data-search-target=".post-card" placeholder="Titre du post">
+        <input type="search" data-search-input data-search-target=".post-card" placeholder="Rechercher un post...">
       </label>
 
-      <div class="sort-actions" aria-label="Trier les posts">
-        <a class="edit-btn" href="/?sort=recent">Récent</a>
-        <a class="edit-btn" href="/?sort=likes">Plus liké</a>
-        <a class="edit-btn" href="/?sort=comments">Plus commenté</a>
+      <div class="sort-actions">
+        <a class="tab is-active" href="/?sort=recent">R&#233;cent</a>
+        <a class="tab" href="/?sort=likes">Populaire</a>
+        <a class="tab" href="/?sort=comments">Discut&#233;</a>
       </div>
     </div>
 
     <div class="post-list">
       {{range .Posts}}
-      <article class="post" data-search-text="{{.Title}}">
+      <article class="card post-card" data-search-text="{{.Title}}">
         <div class="post-meta">
           <span class="avatar small">FN</span>
           <div>
@@ -35,8 +35,14 @@
           </div>
         </div>
 
-        <h2 class="post-title">{{.Title}}</h2>
-        <p class="post-text">{{.Content}}</p>
+        <h2>{{.Title}}</h2>
+        <p>{{.Content}}</p>
+
+        {{if .Tags}}
+        <div class="tag-row">
+          {{range .Tags}}<span>{{.}}</span>{{end}}
+        </div>
+        {{end}}
 
         <div class="post-footer">
           <div class="post-stats">
@@ -44,17 +50,18 @@
             <span><strong>{{.CommentsCount}}</strong> commentaires</span>
           </div>
           <div class="post-actions">
-            <button class="like-btn" type="button" data-like-button data-post-id="{{.ID}}">
-              <span data-like-label>❤️ Like</span>
+            <button class="button icon like-button{{if .Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.ID}}">
+              <span data-like-label>{{if .Liked}}Lik&#233;{{else}}Like{{end}}</span>
             </button>
-            <a class="edit-btn" href="/posts/{{.ID}}">Voir le post</a>
+            <a class="button primary" href="/posts/{{.ID}}">Voir</a>
           </div>
         </div>
       </article>
       {{else}}
       <div class="empty-state">
         <h2>Aucun post pour le moment</h2>
-        <p>Publie le premier entraînement, conseil ou retour d'expérience.</p>
+        <p>Publie le premier entra&#238;nement, conseil ou retour d'exp&#233;rience.</p>
+        <a class="button primary" href="/posts/new" style="margin-top: 16px; display: inline-flex;">Cr&#233;er un post</a>
       </div>
       {{end}}
     </div>
@@ -62,35 +69,34 @@
 
   <aside class="sidebar">
     <div class="panel">
-      <h2>Suggestions</h2>
+      <h2 style="margin-bottom: 16px;">Suggestions</h2>
       <div class="suggestion-list">
         {{range .Users}}
         <div class="suggestion-item">
-          <div>
-            <strong>{{.Username}}</strong>
-            <button class="edit-btn" type="button">Suivre</button>
-          </div>
+          <strong>{{.Username}}</strong>
+          <button class="mini-button follow-button" type="button">Suivre</button>
         </div>
         {{end}}
       </div>
     </div>
 
     <div class="panel">
-      <h2>Filtres</h2>
+      <h2 style="margin-bottom: 16px;">Filtres</h2>
       <form class="filter-form" method="GET" action="/">
-        <div class="input-container">
+        <label>
+          P&#233;riode
           <select name="date">
-            <option value="">Toutes les dates</option>
+            <option value="">Toutes</option>
             <option value="today">Aujourd'hui</option>
             <option value="week">Cette semaine</option>
             <option value="month">Ce mois-ci</option>
           </select>
-          <input type="number" name="likes" min="0" placeholder="Likes minimum">
-          <input type="number" name="comments" min="0" placeholder="Commentaires minimum">
-        </div>
-        <div class="button">
-          <button class="submit" type="submit">Filtrer</button>
-        </div>
+        </label>
+        <label>
+          Likes minimum
+          <input type="number" name="likes" min="0" placeholder="0">
+        </label>
+        <button class="button primary full" type="submit">Appliquer</button>
       </form>
     </div>
   </aside>

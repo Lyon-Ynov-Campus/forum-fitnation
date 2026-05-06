@@ -18,7 +18,7 @@
       <tr>
         <td>{{.Username}}</td>
         <td>{{.Email}}</td>
-        <td><button class="delete-btn">Bannir</button></td>
+        <td><button class="button danger">Bannir</button></td>
       </tr>
       {{else}}
       <tr>
@@ -34,7 +34,6 @@
       <tr>
         <th>Titre</th>
         <th>Auteur</th>
-        <th>Date</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -43,42 +42,14 @@
       <tr>
         <td>{{.Title}}</td>
         <td>{{.Author}}</td>
-        <td>{{.CreatedAt}}</td>
-        <td><button class="delete-btn">Supprimer</button></td>
+        <td><button class="button danger">Supprimer</button></td>
       </tr>
       {{else}}
       <tr>
-        <td colspan="4">Aucun post</td>
+        <td colspan="3">Aucun post</td>
       </tr>
       {{end}}
     </tbody>
   </table>
-
-  <h2>Commentaires</h2>
-  <table class="admin-table">
-    <thead>
-      <tr>
-        <th>Contenu</th>
-        <th>Auteur</th>
-        <th>Date</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Comments}}
-      <tr>
-        <td>{{.Content}}</td>
-        <td>{{.Author}}</td>
-        <td>{{.CreatedAt}}</td>
-        <td><button class="delete-btn">Supprimer</button></td>
-      </tr>
-      {{else}}
-      <tr>
-        <td colspan="4">Aucun commentaire</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
-
 </section>
 {{end}}

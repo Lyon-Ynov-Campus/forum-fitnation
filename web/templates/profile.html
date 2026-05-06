@@ -28,15 +28,6 @@
   </section>
 
   <section class="content-column">
-<<<<<<< HEAD
-    <div class="card">
-      <h2>Modifier le profil</h2>
-      <form class="form" method="POST" action="/profile/update" enctype="multipart/form-data">
-        <div class="input-container">
-          <input type="text" name="username" value="{{.User.Username}}" placeholder="Pseudo" required>
-          <input type="email" name="email" value="{{.User.Email}}" placeholder="Email" required>
-          <input type="password" name="password" placeholder="Nouveau mot de passe">
-=======
     <div class="card" style="margin-bottom: 24px;">
       <h2 style="margin-bottom: 20px;">Modifier le profil</h2>
       <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
@@ -54,37 +45,18 @@
         </label>
         <label>
           Photo de profil
->>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
           <input type="file" name="avatar" accept="image/*">
-        </div>
-        <div class="button">
-          <button class="submit" type="submit">Enregistrer</button>
-        </div>
+        </label>
+        <button class="button primary span-two" type="submit">Enregistrer</button>
       </form>
     </div>
 
-    <div class="profile-tabs">
-      <button class="tab-btn active" onclick="showTab('posts')">Mes posts</button>
-      <button class="tab-btn" onclick="showTab('comments')">Mes commentaires</button>
+    <div class="section-title">
+      <h2>Mes posts</h2>
     </div>
 
-    <div id="tab-posts">
+    <div class="post-list compact">
       {{range .Posts}}
-<<<<<<< HEAD
-      <div class="post">
-        <div class="vote">{{.LikesCount}}</div>
-        <div class="post-content">
-          <div class="post-header">{{.CreatedAt}}</div>
-          <h3 class="post-title">{{.Title}}</h3>
-          <p class="post-text">{{.Content}}</p>
-          <div class="comment-actions">
-            <a href="/posts/{{.ID}}/edit"><button class="edit-btn">Modifier</button></a>
-            <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline">
-              <button class="delete-btn" type="submit">Supprimer</button>
-            </form>
-          </div>
-        </div>
-=======
       <article class="card post-card" data-search-text="{{.Title}}">
         <div class="post-meta">
           <span class="avatar small">FN</span>
@@ -111,35 +83,12 @@
       <div class="empty-state">
         <h2>Aucun post publi&#233;</h2>
         <p>Ton prochain post appara&#238;tra ici.</p>
->>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
       </div>
-      {{else}}
-      <p>Aucun post publié.</p>
       {{end}}
     </div>
 
-<<<<<<< HEAD
-    <div id="tab-comments" style="display:none">
-      {{range .Comments}}
-      <div class="comment">
-        <p class="post-header">{{.CreatedAt}}</p>
-        <p class="post-text">{{.Content}}</p>
-        <div class="comment-actions">
-          <button class="edit-btn">Modifier</button>
-          <button class="delete-btn">Supprimer</button>
-        </div>
-      </div>
-      {{else}}
-      <p>Aucun commentaire.</p>
-      {{end}}
-    </div>
-
-    <form method="POST" action="/profile/delete" style="margin-top:20px">
-      <button class="delete-btn" type="submit">Supprimer le compte</button>
-=======
     <form method="POST" action="/profile/delete" class="danger-zone">
       <button class="button danger full" type="submit" data-confirm="Supprimer d&#233;finitivement votre compte ?">Supprimer le compte</button>
->>>>>>> 1fd6fcceee998e99252a4cbf6bf169b2276c9898
     </form>
   </section>
 </section>
