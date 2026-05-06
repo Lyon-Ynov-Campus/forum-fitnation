@@ -42,21 +42,23 @@ function initLikes() {
       var ripple = document.createElement("span");
       ripple.className = "ripple";
       var rect = button.getBoundingClientRect();
-      ripple.style.left = (e.clientX - rect.left - 10) + "px";
-      ripple.style.top = (e.clientY - rect.top - 10) + "px";
+      ripple.style.left = e.clientX - rect.left - 10 + "px";
+      ripple.style.top = e.clientY - rect.top - 10 + "px";
       button.appendChild(ripple);
-      setTimeout(function () { ripple.remove(); }, 600);
+      setTimeout(function () {
+        ripple.remove();
+      }, 600);
 
       fetch("/api/posts/" + postId + "/like", {
         method: "POST",
-        headers: { "Accept": "application/json" }
+        headers: { Accept: "application/json" },
       })
         .then(function (response) {
           if (response.status === 401) {
             window.location.href = "/login";
             return null;
           }
-          if (!response.ok) throw new Error("Erreur");
+          if (!response.ok) throw new Error("Erreur serveur");
           return response.json();
         })
         .then(function (data) {
@@ -65,7 +67,9 @@ function initLikes() {
         })
         .catch(function () {
           button.classList.add("has-error");
-          setTimeout(function () { button.classList.remove("has-error"); }, 800);
+          setTimeout(function () {
+            button.classList.remove("has-error");
+          }, 800);
         })
         .finally(function () {
           button.disabled = false;
@@ -84,15 +88,42 @@ function updateLikeButton(button, data) {
 
   if (count && typeof data.likes_count !== "undefined") {
     animateCounter(count, parseInt(count.textContent) || 0, data.likes_count);
+    count.style.color = "#00ff88";
+    setTimeout(function () {
+      count.style.color = "";
+    }, 500);
   }
 
   if (label) {
-    label.textContent = liked ? "Lik\u00e9" : "Like";
+    label.textContent = liked ? "Liké" : "Like";
   }
 
   if (liked) {
     button.style.transform = "scale(1.15)";
-    setTimeout(function () { button.style.transform = ""; }, 200);
+    setTimeout(function () {
+      button.style.transform = "";
+    }, 200);
+
+    var notification = document.createElement("div");
+    notification.textContent = "Post liké !";
+    notification.style.position = "fixed";
+    notification.style.bottom = "20px";
+    notification.style.right = "20px";
+    notification.style.background = "#00ff88";
+    notification.style.color = "#0d0d0d";
+    notification.style.padding = "10px 20px";
+    notification.style.borderRadius = "8px";
+    notification.style.fontWeight = "bold";
+    notification.style.zIndex = "999";
+    document.body.appendChild(notification);
+
+    setTimeout(function () {
+      notification.style.opacity = "0";
+      notification.style.transition = "opacity 0.3s";
+      setTimeout(function () {
+        notification.remove();
+      }, 300);
+    }, 2000);
   }
 }
 
@@ -124,14 +155,16 @@ function initSearch() {
         var query = normalize(input.value);
         var items = document.querySelectorAll(targetSelector);
 
-        items.forEach(function (item, index) {
+        items.forEach(function (item) {
           var text = normalize(item.dataset.searchText || item.textContent);
           var shouldHide = query !== "" && text.indexOf(query) === -1;
 
           if (shouldHide) {
             item.style.opacity = "0";
             item.style.transform = "scale(0.97)";
-            setTimeout(function () { item.classList.add("is-hidden"); }, 150);
+            setTimeout(function () {
+              item.classList.add("is-hidden");
+            }, 150);
           } else {
             item.classList.remove("is-hidden");
             item.style.opacity = "";
@@ -166,7 +199,9 @@ function initFollowButtons() {
       button.textContent = isFollowing ? "Suivi" : "Suivre";
 
       button.style.transform = "scale(0.92)";
-      setTimeout(function () { button.style.transform = ""; }, 150);
+      setTimeout(function () {
+        button.style.transform = "";
+      }, 150);
     });
   });
 }
@@ -184,16 +219,26 @@ function initTags() {
     if (!input) return;
 
     function getTags() {
-      return input.value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
+      return input.value
+        .split(",")
+        .map(function (t) {
+          return t.trim();
+        })
+        .filter(Boolean);
     }
 
     function setTags(tags) {
       input.value = tags.join(",");
       buttons.forEach(function (btn) {
-        btn.classList.toggle("is-selected", tags.indexOf(btn.dataset.tagOption) !== -1);
+        btn.classList.toggle(
+          "is-selected",
+          tags.indexOf(btn.dataset.tagOption) !== -1,
+        );
       });
       if (label) {
-        label.textContent = tags.length ? "Tags : " + tags.join(", ") : "Aucun tag s\u00e9lectionn\u00e9";
+        label.textContent = tags.length
+          ? "Tags : " + tags.join(", ")
+          : "Aucun tag sélectionné";
       }
     }
 
@@ -209,7 +254,9 @@ function initTags() {
       btn.addEventListener("click", function () {
         toggleTag(btn.dataset.tagOption);
         btn.style.transform = "scale(0.92)";
-        setTimeout(function () { btn.style.transform = ""; }, 150);
+        setTimeout(function () {
+          btn.style.transform = "";
+        }, 150);
       });
     });
 
@@ -238,22 +285,28 @@ function initTags() {
 function initScrollReveal() {
   if (!("IntersectionObserver" in window)) return;
 
-  var revealElements = document.querySelectorAll(".panel, .profile-hero, .comments-section, .member-card, .empty-state");
+  var revealElements = document.querySelectorAll(
+    ".panel, .profile-hero, .comments-section, .member-card, .empty-state",
+  );
 
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = "1";
-        entry.target.style.transform = "translateY(0)";
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+  var observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = "1";
+          entry.target.style.transform = "translateY(0)";
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+  );
 
   revealElements.forEach(function (el) {
     el.style.opacity = "0";
     el.style.transform = "translateY(12px)";
-    el.style.transition = "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
+    el.style.transition =
+      "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)";
     observer.observe(el);
   });
 }
@@ -263,19 +316,22 @@ function initSmoothCounters() {
 
   if (!("IntersectionObserver" in window) || !statElements.length) return;
 
-  var observer = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        var el = entry.target;
-        var target = parseInt(el.textContent) || 0;
-        if (target > 0) {
-          el.textContent = "0";
-          animateCounter(el, 0, target);
+  var observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var target = parseInt(el.textContent) || 0;
+          if (target > 0) {
+            el.textContent = "0";
+            animateCounter(el, 0, target);
+          }
+          observer.unobserve(el);
         }
-        observer.unobserve(el);
-      }
-    });
-  }, { threshold: 0.5 });
+      });
+    },
+    { threshold: 0.5 },
+  );
 
   statElements.forEach(function (el) {
     observer.observe(el);

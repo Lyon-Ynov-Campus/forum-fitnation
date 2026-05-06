@@ -26,14 +26,15 @@
 
       <div class="nav-links" data-menu>
         <a href="/">Feed</a>
-        {{if .CurrentUser}}
-        <a href="/posts/new">Publier</a>
-        <a href="/network">R&#233;seau</a>
-        <a href="/profile">Profil</a>
-        <form class="logout-form" method="POST" action="/logout">
-          <button type="submit">D&#233;connexion</button>
-        </form>
-        {{else}}
+       {{if .CurrentUser}}
+<a href="/posts/new">Publier</a>
+<a href="/network">R&#233;seau</a>
+<a href="/profile">Profil</a>
+<a href="/admin">Admin</a>
+<form class="logout-form" method="POST" action="/logout">
+  <button type="submit">D&#233;connexion</button>
+</form>
+{{else}}
         <a class="nav-login" href="/login">Connexion</a>
         <a href="/register">Inscription</a>
         {{end}}

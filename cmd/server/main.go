@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -29,8 +28,6 @@ type App struct {
 }
 
 func main() {
-	loadEnvFile()
-
 	dbPath := os.Getenv("FITNATION_DB")
 	if dbPath == "" {
 		dbPath = "fitnation.db"
@@ -66,41 +63,8 @@ func main() {
 	mux.HandleFunc("/api/comments/create", app.createComment)
 	mux.HandleFunc("/api/comments/", app.commentsRouter)
 
-	smtpHost := os.Getenv("SMTP_HOST")
-	if smtpHost != "" {
-		log.Printf("SMTP configuré → %s:%s (from: %s)", smtpHost, os.Getenv("SMTP_PORT"), os.Getenv("SMTP_FROM"))
-	} else {
-		log.Println("SMTP non configuré → les liens de réinitialisation seront affichés dans la console")
-	}
-
 	log.Println("FITNATION lancé sur http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", mux))
-}
-
-func loadEnvFile() {
-	file, err := os.Open(".env")
-	if err != nil {
-		return
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-		value = strings.Trim(value, `"'`)
-		if os.Getenv(key) == "" {
-			os.Setenv(key, value)
-		}
-	}
 }
 
 func (a *App) home(w http.ResponseWriter, r *http.Request) {
@@ -287,18 +251,14 @@ func (a *App) forgotPassword(w http.ResponseWriter, r *http.Request) {
 
 			link := resetLink(r, token)
 			resetURL = link
-			emailSent = sendResetEmail(user.Email, user.FullName, link)
+			emailSent = sendResetEmail(user.Email, link)
 		}
 
-		data := map[string]any{}
-
-		if emailSent {
-			data["Message"] = "Un email de réinitialisation a été envoyé à " + email + ". Vérifie ta boîte de réception (et les spams)."
-		} else if resetURL != "" {
+		data := map[string]any{
+			"Message": "Si cet email existe, un lien de réinitialisation a été envoyé.",
+		}
+		if resetURL != "" && !emailSent {
 			data["DevLink"] = resetURL
-			data["Message"] = "SMTP non configuré — utilise le lien ci-dessous pour réinitialiser ton mot de passe."
-		} else {
-			data["Message"] = "Si cet email existe, un lien de réinitialisation a été envoyé."
 		}
 
 		a.render(w, "forgot_password.html", data)
@@ -322,9 +282,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user == nil {
-			a.render(w, "forgot_password.html", map[string]any{
-				"Error": "Ce lien est invalide ou a expiré. Demande un nouveau lien ci-dessous.",
-			})
+			http.Error(w, "Lien invalide ou expiré", http.StatusBadRequest)
 			return
 		}
 
@@ -339,18 +297,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		confirm := r.FormValue("password_confirm")
 		if token == "" || password == "" || password != confirm {
-			a.render(w, "reset_password.html", map[string]any{
-				"Token": token,
-				"Error": "Les mots de passe ne correspondent pas.",
-			})
-			return
-		}
-
-		if len(password) < 8 {
-			a.render(w, "reset_password.html", map[string]any{
-				"Token": token,
-				"Error": "Le mot de passe doit contenir au moins 8 caractères.",
-			})
+			http.Error(w, "Formulaire invalide", http.StatusBadRequest)
 			return
 		}
 
@@ -360,9 +307,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user == nil {
-			a.render(w, "forgot_password.html", map[string]any{
-				"Error": "Ce lien est invalide ou a expiré. Demande un nouveau lien ci-dessous.",
-			})
+			http.Error(w, "Lien invalide ou expiré", http.StatusBadRequest)
 			return
 		}
 
@@ -381,9 +326,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		a.render(w, "login.html", map[string]any{
-			"Success": "Mot de passe modifié avec succès. Connecte-toi avec ton nouveau mot de passe.",
-		})
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	default:
 		methodNotAllowed(w)
 	}
@@ -941,7 +884,7 @@ func resetLink(r *http.Request, token string) string {
 	return fmt.Sprintf("%s://%s/reset-password?token=%s", scheme, r.Host, token)
 }
 
-func sendResetEmail(to, fullName, link string) bool {
+func sendResetEmail(to, link string) bool {
 	host := os.Getenv("SMTP_HOST")
 	port := os.Getenv("SMTP_PORT")
 	user := os.Getenv("SMTP_USER")
@@ -949,92 +892,26 @@ func sendResetEmail(to, fullName, link string) bool {
 	from := os.Getenv("SMTP_FROM")
 
 	if host == "" || port == "" || user == "" || password == "" || from == "" {
-		log.Println("⚠ SMTP non configuré — lien de réinitialisation pour", to+":", link)
+		log.Println("Lien de réinitialisation pour", to+":", link)
 		return false
 	}
-
-	displayName := fullName
-	if displayName == "" {
-		displayName = "Membre"
-	}
-
-	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0f1117;font-family:'Helvetica Neue',Arial,sans-serif;">
-<table width="100%%" cellpadding="0" cellspacing="0" style="background:#0f1117;padding:40px 20px;">
-<tr><td align="center">
-<table width="520" cellpadding="0" cellspacing="0" style="background:#1a1d27;border-radius:16px;border:1px solid #2a2d3a;">
-
-<tr><td style="padding:32px 32px 24px;text-align:center;">
-  <div style="display:inline-block;width:48px;height:48px;background:#5ae082;border-radius:10px;line-height:48px;font-size:16px;font-weight:800;color:#0a2010;">FN</div>
-  <h1 style="color:#edeef2;font-size:22px;margin:16px 0 0;">FITNATION</h1>
-</td></tr>
-
-<tr><td style="padding:0 32px 24px;">
-  <h2 style="color:#edeef2;font-size:18px;margin:0 0 12px;">Salut %s,</h2>
-  <p style="color:#9599a6;font-size:15px;line-height:1.6;margin:0 0 24px;">
-    Tu as demandé à réinitialiser ton mot de passe. Clique sur le bouton ci-dessous pour en choisir un nouveau.
-  </p>
-  <table cellpadding="0" cellspacing="0" width="100%%">
-  <tr><td align="center">
-    <a href="%s" style="display:inline-block;padding:14px 32px;background:#5ae082;color:#0a2010;font-size:15px;font-weight:700;border-radius:8px;text-decoration:none;">
-      Réinitialiser mon mot de passe
-    </a>
-  </td></tr>
-  </table>
-</td></tr>
-
-<tr><td style="padding:0 32px 24px;">
-  <p style="color:#656878;font-size:13px;line-height:1.5;margin:0;">
-    Ce lien expire dans <strong style="color:#9599a6;">1 heure</strong>.<br>
-    Si tu n'es pas à l'origine de cette demande, ignore cet email.
-  </p>
-</td></tr>
-
-<tr><td style="padding:16px 32px;border-top:1px solid #2a2d3a;">
-  <p style="color:#454859;font-size:12px;margin:0;text-align:center;">
-    FITNATION — Ta communauté fitness
-  </p>
-</td></tr>
-
-</table>
-</td></tr>
-</table>
-</body>
-</html>`, displayName, link)
-
-	boundary := "----FN" + fmt.Sprintf("%d", time.Now().UnixNano())
-
-	headers := "MIME-Version: 1.0\r\n" +
-		"From: FITNATION <" + from + ">\r\n" +
-		"To: " + to + "\r\n" +
-		"Subject: =?UTF-8?B?" + base64.StdEncoding.EncodeToString([]byte("Réinitialisation de ton mot de passe — FITNATION")) + "?=\r\n" +
-		"Content-Type: multipart/alternative; boundary=\"" + boundary + "\"\r\n"
-
-	textBody := fmt.Sprintf("Salut %s,\r\n\r\nTu as demandé à réinitialiser ton mot de passe FITNATION.\r\n\r\nClique sur ce lien pour choisir un nouveau mot de passe :\r\n%s\r\n\r\nCe lien expire dans 1 heure.\r\nSi tu n'es pas à l'origine de cette demande, ignore cet email.\r\n\r\n— FITNATION", displayName, link)
-
-	message := headers + "\r\n" +
-		"--" + boundary + "\r\n" +
-		"Content-Type: text/plain; charset=\"UTF-8\"\r\n" +
-		"Content-Transfer-Encoding: quoted-printable\r\n\r\n" +
-		textBody + "\r\n" +
-		"--" + boundary + "\r\n" +
-		"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
-		"Content-Transfer-Encoding: quoted-printable\r\n\r\n" +
-		htmlBody + "\r\n" +
-		"--" + boundary + "--\r\n"
 
 	auth := smtp.PlainAuth("", user, password, host)
-	addr := host + ":" + port
+	message := "" +
+		"To: " + to + "\r\n" +
+		"Subject: Réinitialisation du mot de passe FITNATION\r\n" +
+		"\r\n" +
+		"Bonjour,\r\n\r\n" +
+		"Pour réinitialiser ton mot de passe, clique sur ce lien :\r\n" +
+		link + "\r\n\r\n" +
+		"Ce lien expire dans 1 heure.\r\n"
 
-	if err := smtp.SendMail(addr, auth, from, []string{to}, []byte(message)); err != nil {
-		log.Printf("✗ Erreur envoi email à %s : %v", to, err)
-		log.Println("→ Lien de réinitialisation :", link)
+	if err := smtp.SendMail(host+":"+port, auth, from, []string{to}, []byte(message)); err != nil {
+		log.Println("Erreur envoi email:", err)
+		log.Println("Lien de réinitialisation pour", to+":", link)
 		return false
 	}
 
-	log.Printf("✓ Email de réinitialisation envoyé à %s", to)
 	return true
 }
 

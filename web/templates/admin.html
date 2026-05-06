@@ -1,0 +1,55 @@
+{{define "title"}}Admin | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell">
+  <h1>Panel Admin</h1>
+
+  <h2>Utilisateurs</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Utilisateur</th>
+        <th>Email</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Users}}
+      <tr>
+        <td>{{.Username}}</td>
+        <td>{{.Email}}</td>
+        <td><button class="button danger">Bannir</button></td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="3">Aucun utilisateur</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <h2>Posts</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Titre</th>
+        <th>Auteur</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Posts}}
+      <tr>
+        <td>{{.Title}}</td>
+        <td>{{.Author}}</td>
+        <td><button class="button danger">Supprimer</button></td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="3">Aucun post</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</section>
+{{end}}
