@@ -27,7 +27,27 @@ type App struct {
 	store *database.Store
 }
 
+func loadEnv(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, val, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		os.Setenv(strings.TrimSpace(key), strings.TrimSpace(val))
+	}
+}
+
 func main() {
+	loadEnv(".env")
+
 	dbPath := os.Getenv("FITNATION_DB")
 	if dbPath == "" {
 		dbPath = "fitnation.db"
