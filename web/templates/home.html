@@ -1,104 +1,157 @@
-{{define "title"}}Feed | FITNATION{{end}}
-
-{{define "content"}}
-<section class="page-shell feed-layout">
-  <section class="content-column">
-    <div class="page-heading compact-heading">
-      <div>
-        <p class="eyebrow">Communaut&#233;</p>
-        <h1>Feed</h1>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <button class="nav-toggle" type="button" data-menu-toggle aria-label="Ouvrir le menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" data-menu>
+        <a href="/">Feed</a>
+        {{if .CurrentUser}}
+        <a href="/posts/new">Publier</a>
+        <a href="/network">Réseau</a>
+        <a href="/profile">Profil</a>
+        <a href="/admin">Admin</a>
+        <form class="logout-form" method="POST" action="/logout">
+          <button type="submit">Déconnexion</button>
+        </form>
+        {{else}}
+        <a class="nav-login" href="/login">Connexion</a>
+        <a href="/register">Inscription</a>
+        {{end}}
       </div>
-      <a class="button primary" href="/posts/new">+ Nouveau post</a>
-    </div>
+    </nav>
+  </header>
 
-    <div class="tools-bar">
-      <label class="search-field">
-        <span>Rechercher</span>
-        <input type="search" data-search-input data-search-target=".post-card" placeholder="Rechercher un post...">
-      </label>
-
-      <div class="sort-actions">
-        <a class="tab is-active" href="/?sort=recent">R&#233;cent</a>
-        <a class="tab" href="/?sort=likes">Populaire</a>
-        <a class="tab" href="/?sort=comments">Discut&#233;</a>
-      </div>
-    </div>
-
-    <div class="post-list">
-      {{range .Posts}}
-      <article class="card post-card" data-search-text="{{.Title}}">
-        <div class="post-meta">
-          <span class="avatar small">FN</span>
+  <main class="app-main">
+    <section class="page-shell feed-layout">
+      <section class="content-column">
+        <div class="page-heading compact-heading">
           <div>
-            <strong>{{.Author}}</strong>
-            <span>{{.CreatedAt}}</span>
+            <p class="eyebrow">Communauté</p>
+            <h1>Feed</h1>
+          </div>
+          {{if .CurrentUser}}
+          <a class="button primary" href="/posts/new">+ Nouveau post</a>
+          {{end}}
+        </div>
+
+        <div class="tools-bar">
+          <label class="search-field">
+            <span>Rechercher</span>
+            <input type="search" data-search-input data-search-target=".post-card" placeholder="Rechercher un post...">
+          </label>
+          <div class="sort-actions">
+            <a class="tab {{if eq .Sort ""}}is-active{{end}}" href="/?sort=recent">Récent</a>
+            <a class="tab {{if eq .Sort "likes"}}is-active{{end}}" href="/?sort=likes">Populaire</a>
+            <a class="tab {{if eq .Sort "comments"}}is-active{{end}}" href="/?sort=comments">Discuté</a>
           </div>
         </div>
 
-        <h2>{{.Title}}</h2>
-        <p>{{.Content}}</p>
-
-        {{if .Tags}}
-        <div class="tag-row">
-          {{range .Tags}}<span>{{.}}</span>{{end}}
-        </div>
-        {{end}}
-
-        <div class="post-footer">
-          <div class="post-stats">
-            <span><strong data-like-count>{{.LikesCount}}</strong> likes</span>
-            <span><strong>{{.CommentsCount}}</strong> commentaires</span>
+        <div class="post-list">
+          {{range .Posts}}
+          <article class="card post-card" data-search-text="{{.Title}}">
+            <div class="post-meta">
+              <span class="avatar small">FN</span>
+              <div>
+                <strong>{{.Author}}</strong>
+                <span>{{.CreatedAt}}</span>
+              </div>
+            </div>
+            <h2>{{.Title}}</h2>
+            <p>{{.Content}}</p>
+            {{if .Tags}}
+            <div class="tag-row">
+              {{range .Tags}}<span>{{.}}</span>{{end}}
+            </div>
+            {{end}}
+            <div class="post-footer">
+              <div class="post-stats">
+                <span><strong data-like-count>{{.LikesCount}}</strong> likes</span>
+                <span><strong>{{.CommentsCount}}</strong> commentaires</span>
+              </div>
+              <div class="post-actions">
+                <button class="button icon like-button{{if .Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.ID}}">
+                  <span data-like-label>{{if .Liked}}Liké{{else}}Like{{end}}</span>
+                </button>
+                <a class="button primary" href="/posts/{{.ID}}">Voir</a>
+              </div>
+            </div>
+          </article>
+          {{else}}
+          <div class="empty-state">
+            <h2>Aucun post pour le moment</h2>
+            <p>Publie le premier entraînement, conseil ou retour d'expérience.</p>
+            {{if .CurrentUser}}
+            <a class="button primary" href="/posts/new" style="margin-top: 16px; display: inline-flex;">Créer un post</a>
+            {{end}}
           </div>
-          <div class="post-actions">
-            <button class="button icon like-button{{if .Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.ID}}">
-              <span data-like-label>{{if .Liked}}Lik&#233;{{else}}Like{{end}}</span>
-            </button>
-            <a class="button primary" href="/posts/{{.ID}}">Voir</a>
+          {{end}}
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <h2 style="margin-bottom: 16px;">Suggestions</h2>
+          <div class="suggestion-list">
+            {{range .Users}}
+            <div class="suggestion-item">
+              <strong>{{.Username}}</strong>
+              <button class="mini-button follow-button" type="button">Suivre</button>
+            </div>
+            {{end}}
           </div>
         </div>
-      </article>
-      {{else}}
-      <div class="empty-state">
-        <h2>Aucun post pour le moment</h2>
-        <p>Publie le premier entra&#238;nement, conseil ou retour d'exp&#233;rience.</p>
-        <a class="button primary" href="/posts/new" style="margin-top: 16px; display: inline-flex;">Cr&#233;er un post</a>
-      </div>
-      {{end}}
-    </div>
-  </section>
 
-  <aside class="sidebar">
-    <div class="panel">
-      <h2 style="margin-bottom: 16px;">Suggestions</h2>
-      <div class="suggestion-list">
-        {{range .Users}}
-        <div class="suggestion-item">
-          <strong>{{.Username}}</strong>
-          <button class="mini-button follow-button" type="button">Suivre</button>
+        <div class="panel">
+          <h2 style="margin-bottom: 16px;">Filtres</h2>
+          <form class="filter-form" method="GET" action="/">
+            <label>
+              Période
+              <select name="date">
+                <option value="">Toutes</option>
+                <option value="today">Aujourd'hui</option>
+                <option value="week">Cette semaine</option>
+                <option value="month">Ce mois-ci</option>
+              </select>
+            </label>
+            <label>
+              Likes minimum
+              <input type="number" name="likes" min="0" placeholder="0">
+            </label>
+            <button class="button primary full" type="submit">Appliquer</button>
+          </form>
         </div>
-        {{end}}
-      </div>
-    </div>
+      </aside>
+    </section>
+  </main>
 
-    <div class="panel">
-      <h2 style="margin-bottom: 16px;">Filtres</h2>
-      <form class="filter-form" method="GET" action="/">
-        <label>
-          P&#233;riode
-          <select name="date">
-            <option value="">Toutes</option>
-            <option value="today">Aujourd'hui</option>
-            <option value="week">Cette semaine</option>
-            <option value="month">Ce mois-ci</option>
-          </select>
-        </label>
-        <label>
-          Likes minimum
-          <input type="number" name="likes" min="0" placeholder="0">
-        </label>
-        <button class="button primary full" type="submit">Appliquer</button>
-      </form>
-    </div>
-  </aside>
-</section>
-{{end}}
+  <nav class="bottom-nav" aria-label="Navigation mobile">
+    <a href="/">&#8962;</a>
+    <a href="/network">&#9906;</a>
+    {{if .CurrentUser}}
+    <a class="bottom-create" href="/posts/new">+</a>
+    <a href="/profile">&#9673;</a>
+    {{else}}
+    <a class="bottom-create" href="/login">+</a>
+    <a href="/login">&#8618;</a>
+    {{end}}
+  </nav>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

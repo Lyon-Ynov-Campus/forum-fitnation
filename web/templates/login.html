@@ -1,33 +1,61 @@
-{{define "title"}}Connexion | FITNATION{{end}}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <div class="nav-links">
+        <a href="/">Feed</a>
+        <a class="nav-login" href="/login">Connexion</a>
+        <a href="/register">Inscription</a>
+      </div>
+    </nav>
+  </header>
 
-{{define "content"}}
-<section class="auth-page">
-  <div class="auth-card">
-    <div class="auth-header">
-      <span class="brand-mark">FN</span>
-      <h1>Content de te revoir</h1>
-      <p>Retrouve ton feed et ta communauté.</p>
-    </div>
+  <main class="app-main">
+    <section class="auth-page">
+      <div class="auth-card">
+        <div class="auth-header">
+          <span class="brand-mark">FN</span>
+          <h1>Content de te revoir</h1>
+          <p>Retrouve ton feed et ta communauté.</p>
+        </div>
 
-    {{if .Success}}
-    <p class="success">{{.Success}}</p>
-    {{end}}
+        {{if .Success}}
+        <p class="success">{{.Success}}</p>
+        {{end}}
 
-    <form class="form" method="POST" action="/login">
-      <label>
-        Pseudo ou email
-        <input type="text" name="username" autocomplete="username" placeholder="ton pseudo ou email">
-      </label>
-      <label>
-        Mot de passe
-        <input type="password" name="password" autocomplete="current-password" required placeholder="••••••••">
-      </label>
-      <button class="button primary full" type="submit">Se connecter</button>
-    </form>
+        <form class="form" method="POST" action="/login">
+          <label>
+            Pseudo ou email
+            <input type="text" name="username" autocomplete="username" placeholder="ton pseudo ou email">
+          </label>
+          <label>
+            Mot de passe
+            <input type="password" name="password" autocomplete="current-password" required placeholder="••••••••">
+          </label>
+          <button class="button primary full" type="submit">Se connecter</button>
+        </form>
 
-    <p class="auth-link"><a href="/forgot-password">Mot de passe oublié ?</a></p>
-    <div class="auth-separator">ou</div>
-    <p class="auth-link">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
-  </div>
-</section>
-{{end}}
+        <p class="auth-link"><a href="/forgot-password">Mot de passe oublié ?</a></p>
+        <div class="auth-separator">ou</div>
+        <p class="auth-link">Pas encore de compte ? <a href="/register">Créer un compte</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

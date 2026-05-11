@@ -1,95 +1,137 @@
-{{define "title"}}Profil | FITNATION{{end}}
-
-{{define "content"}}
-<section class="page-shell profile-page">
-  <section class="profile-hero card">
-    <div class="profile-topline">
-      <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de {{.User.Username}}">
-      <div>
-        <h1>{{.User.Username}}</h1>
-        <p>{{.User.Email}}</p>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <button class="nav-toggle" type="button" data-menu-toggle aria-label="Ouvrir le menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" data-menu>
+        <a href="/">Feed</a>
+        <a href="/posts/new">Publier</a>
+        <a href="/network">Réseau</a>
+        <a href="/profile">Profil</a>
+        <a href="/admin">Admin</a>
+        <form class="logout-form" method="POST" action="/logout">
+          <button type="submit">Déconnexion</button>
+        </form>
       </div>
-    </div>
+    </nav>
+  </header>
 
-    <div class="profile-stats">
-      <div>
-        <strong>{{.Stats.PostsCount}}</strong>
-        <span>Posts</span>
-      </div>
-      <div>
-        <strong>{{.Stats.CommentsCount}}</strong>
-        <span>Commentaires</span>
-      </div>
-      <div>
-        <strong>{{.Stats.LikesReceived}}</strong>
-        <span>Likes re&#231;us</span>
-      </div>
-    </div>
-  </section>
-
-  <section class="content-column">
-    <div class="card" style="margin-bottom: 24px;">
-      <h2 style="margin-bottom: 20px;">Modifier le profil</h2>
-      <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
-        <label>
-          Pseudo
-          <input type="text" name="username" value="{{.User.Username}}" required>
-        </label>
-        <label>
-          Email
-          <input type="email" name="email" value="{{.User.Email}}" required>
-        </label>
-        <label>
-          Nouveau mot de passe
-          <input type="password" name="password" autocomplete="new-password" placeholder="Laisser vide pour ne pas changer">
-        </label>
-        <label>
-          Photo de profil
-          <input type="file" name="avatar" accept="image/*">
-        </label>
-        <button class="button primary span-two" type="submit">Enregistrer</button>
-      </form>
-    </div>
-
-    <div class="section-title">
-      <h2>Mes posts</h2>
-    </div>
-
-    <div class="post-list compact">
-      {{range .Posts}}
-      <article class="card post-card" data-search-text="{{.Title}}">
-        <div class="post-meta">
-          <span class="avatar small">FN</span>
+  <main class="app-main">
+    <section class="page-shell profile-page">
+      <section class="profile-hero card">
+        <div class="profile-topline">
+          <img class="profile-photo" src="{{.User.AvatarURL}}" alt="Photo de {{.User.Username}}">
           <div>
-            <strong>{{.Title}}</strong>
-            <span>{{.CreatedAt}}</span>
+            <h1>{{.User.Username}}</h1>
+            <p>{{.User.Email}}</p>
           </div>
         </div>
-        <p>{{.Content}}</p>
-        <div class="post-footer">
-          <div class="post-stats">
-            <span>{{.LikesCount}} likes</span>
-            <span>{{.CommentsCount}} commentaires</span>
+        <div class="profile-stats">
+          <div>
+            <strong>{{.Stats.PostsCount}}</strong>
+            <span>Posts</span>
           </div>
-          <div class="post-actions">
-            <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
-            <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline;">
-              <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
-            </form>
+          <div>
+            <strong>{{.Stats.CommentsCount}}</strong>
+            <span>Commentaires</span>
+          </div>
+          <div>
+            <strong>{{.Stats.LikesReceived}}</strong>
+            <span>Likes reçus</span>
           </div>
         </div>
-      </article>
-      {{else}}
-      <div class="empty-state">
-        <h2>Aucun post publi&#233;</h2>
-        <p>Ton prochain post appara&#238;tra ici.</p>
-      </div>
-      {{end}}
-    </div>
+      </section>
 
-    <form method="POST" action="/profile/delete" class="danger-zone">
-      <button class="button danger full" type="submit" data-confirm="Supprimer d&#233;finitivement votre compte ?">Supprimer le compte</button>
-    </form>
-  </section>
-</section>
-{{end}}
+      <section class="content-column">
+        <div class="card" style="margin-bottom: 24px;">
+          <h2 style="margin-bottom: 20px;">Modifier le profil</h2>
+          <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
+            <label>
+              Pseudo
+              <input type="text" name="username" value="{{.User.Username}}" required>
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" value="{{.User.Email}}" required>
+            </label>
+            <label>
+              Nouveau mot de passe
+              <input type="password" name="password" autocomplete="new-password" placeholder="Laisser vide pour ne pas changer">
+            </label>
+            <label>
+              Photo de profil
+              <input type="file" name="avatar" accept="image/*">
+            </label>
+            <button class="button primary span-two" type="submit">Enregistrer</button>
+          </form>
+        </div>
+
+        <div class="section-title">
+          <h2>Mes posts</h2>
+        </div>
+
+        <div class="post-list compact">
+          {{range .Posts}}
+          <article class="card post-card">
+            <div class="post-meta">
+              <span class="avatar small">FN</span>
+              <div>
+                <strong>{{.Title}}</strong>
+                <span>{{.CreatedAt}}</span>
+              </div>
+            </div>
+            <p>{{.Content}}</p>
+            <div class="post-footer">
+              <div class="post-stats">
+                <span>{{.LikesCount}} likes</span>
+                <span>{{.CommentsCount}} commentaires</span>
+              </div>
+              <div class="post-actions">
+                <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
+                <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline;">
+                  <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+                </form>
+              </div>
+            </div>
+          </article>
+          {{else}}
+          <div class="empty-state">
+            <h2>Aucun post publié</h2>
+            <p>Ton prochain post apparaîtra ici.</p>
+          </div>
+          {{end}}
+        </div>
+
+        <form method="POST" action="/profile/delete" class="danger-zone">
+          <button class="button danger full" type="submit" data-confirm="Supprimer définitivement votre compte ?">Supprimer le compte</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navigation mobile">
+    <a href="/">&#8962;</a>
+    <a href="/network">&#9906;</a>
+    <a class="bottom-create" href="/posts/new">+</a>
+    <a href="/profile">&#9673;</a>
+  </nav>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

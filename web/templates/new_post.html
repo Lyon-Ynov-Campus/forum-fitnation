@@ -1,46 +1,77 @@
-{{define "title"}}Nouveau post | FITNATION{{end}}
-
-{{define "content"}}
-<section class="page-shell form-page">
-  <div class="card editor-card">
-    <div class="section-title editor-title">
-      <h1>Nouveau post</h1>
-      <button class="button primary" type="submit" form="new-post-form">Publier</button>
-    </div>
-
-    <form id="new-post-form" class="form" method="POST" action="/posts/create">
-      <label>
-        Titre
-        <input type="text" name="title" maxlength="120" required placeholder="Titre de ton post">
-      </label>
-      <label>
-        Contenu
-        <textarea name="content" rows="10" required placeholder="Partage ton entra&#238;nement, conseil, ou retour d'exp&#233;rience..."></textarea>
-      </label>
-      <label>
-        Image (optionnel)
-        <input type="url" name="image_url" placeholder="https://exemple.com/image.jpg">
-      </label>
-      <div class="form-block">
-        <span>Tags</span>
-        <input type="hidden" name="tags" data-tags-input>
-        <div class="tag-row">
-          <button type="button" data-tag-option="Musculation">Musculation</button>
-          <button type="button" data-tag-option="Cardio">Cardio</button>
-          <button type="button" data-tag-option="Nutrition">Nutrition</button>
-        </div>
-        <div class="tag-add">
-          <input type="text" data-new-tag placeholder="Tag personnalis&#233;...">
-          <button class="button soft" type="button" data-add-tag>Ajouter</button>
-        </div>
-        <p class="selected-tags" data-selected-tags>Aucun tag s&#233;lectionn&#233;</p>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nouveau post | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <button class="nav-toggle" type="button" data-menu-toggle aria-label="Ouvrir le menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" data-menu>
+        <a href="/">Feed</a>
+        <a href="/posts/new">Publier</a>
+        <a href="/network">Réseau</a>
+        <a href="/profile">Profil</a>
+        <a href="/admin">Admin</a>
+        <form class="logout-form" method="POST" action="/logout">
+          <button type="submit">Déconnexion</button>
+        </form>
       </div>
+    </nav>
+  </header>
 
-      <div class="draft-line">
-        <span></span>
+  <main class="app-main">
+    <section class="page-shell form-page">
+      <div class="card editor-card">
+        <div class="section-title editor-title">
+          <h1>Nouveau post</h1>
+          <button class="button primary" type="submit" form="new-post-form">Publier</button>
+        </div>
+
+        <form id="new-post-form" class="form" method="POST" action="/posts/create">
+          <label>
+            Titre
+            <input type="text" name="title" maxlength="120" required placeholder="Titre de ton post">
+          </label>
+          <label>
+            Contenu
+            <textarea name="content" rows="10" required placeholder="Partage ton entraînement, conseil, ou retour d'expérience..."></textarea>
+          </label>
+          <label>
+            Image (optionnel)
+            <input type="url" name="image_url" placeholder="https://exemple.com/image.jpg">
+          </label>
+          <div class="form-block">
+            <span>Tags</span>
+            <input type="hidden" name="tags" data-tags-input>
+            <div class="tag-row">
+              <button type="button" data-tag-option="Musculation">Musculation</button>
+              <button type="button" data-tag-option="Cardio">Cardio</button>
+              <button type="button" data-tag-option="Nutrition">Nutrition</button>
+            </div>
+            <div class="tag-add">
+              <input type="text" data-new-tag placeholder="Tag personnalisé...">
+              <button class="button soft" type="button" data-add-tag>Ajouter</button>
+            </div>
+            <p class="selected-tags" data-selected-tags>Aucun tag sélectionné</p>
+          </div>
+        </form>
       </div>
-      <p class="draft-text">Brouillon auto-enregistr&#233;</p>
-    </form>
-  </div>
-</section>
-{{end}}
+    </section>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

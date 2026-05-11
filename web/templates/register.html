@@ -1,39 +1,67 @@
-{{define "title"}}Inscription | FITNATION{{end}}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <div class="nav-links">
+        <a href="/">Feed</a>
+        <a class="nav-login" href="/login">Connexion</a>
+        <a href="/register">Inscription</a>
+      </div>
+    </nav>
+  </header>
 
-{{define "content"}}
-<section class="auth-page" style="max-width: 560px;">
-  <div class="auth-card wide">
-    <div class="auth-header">
-      <span class="brand-mark">FN</span>
-      <h1>Rejoins FITNATION</h1>
-      <p>Cr&#233;e ton compte et partage ta progression.</p>
-    </div>
+  <main class="app-main">
+    <section class="auth-page" style="max-width: 560px;">
+      <div class="auth-card wide">
+        <div class="auth-header">
+          <span class="brand-mark">FN</span>
+          <h1>Rejoins FITNATION</h1>
+          <p>Crée ton compte et partage ta progression.</p>
+        </div>
 
-    <form class="form two-columns" method="POST" action="/register">
-      <label>
-        Nom complet
-        <input type="text" name="full_name" autocomplete="name" required placeholder="Jean Dupont">
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" autocomplete="email" required placeholder="jean@email.com">
-      </label>
-      <label>
-        Pseudo
-        <input type="text" name="username" autocomplete="username" required placeholder="@jean_fit">
-      </label>
-      <label>
-        Mot de passe
-        <input type="password" name="password" autocomplete="new-password" required placeholder="8 caract&#232;res minimum">
-      </label>
-      <label class="span-two">
-        Confirmation
-        <input type="password" name="password_confirm" autocomplete="new-password" required placeholder="R&#233;p&#233;ter le mot de passe">
-      </label>
-      <button class="button primary full span-two" type="submit">Cr&#233;er mon compte</button>
-    </form>
+        <form class="form two-columns" method="POST" action="/register">
+          <label>
+            Nom complet
+            <input type="text" name="full_name" autocomplete="name" required placeholder="Jean Dupont">
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" autocomplete="email" required placeholder="jean@email.com">
+          </label>
+          <label>
+            Pseudo
+            <input type="text" name="username" autocomplete="username" required placeholder="@jean_fit">
+          </label>
+          <label>
+            Mot de passe
+            <input type="password" name="password" autocomplete="new-password" required placeholder="8 caractères minimum">
+          </label>
+          <label class="span-two">
+            Confirmation
+            <input type="password" name="password_confirm" autocomplete="new-password" required placeholder="Répéter le mot de passe">
+          </label>
+          <button class="button primary full span-two" type="submit">Créer mon compte</button>
+        </form>
 
-    <p class="auth-link">D&#233;j&#224; inscrit ? <a href="/login">Se connecter</a></p>
-  </div>
-</section>
-{{end}}
+        <p class="auth-link">Déjà inscrit ? <a href="/login">Se connecter</a></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

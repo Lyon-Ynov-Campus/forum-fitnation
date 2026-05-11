@@ -757,7 +757,7 @@ func (a *App) startSession(w http.ResponseWriter, userID int) error {
 }
 
 func (a *App) render(w http.ResponseWriter, page string, data any) {
-	tmpl, err := template.ParseFiles("web/templates/layout.html", "web/templates/"+page)
+	tmpl, err := template.ParseFiles("web/templates/" + page)
 	if err != nil {
 		serverError(w, err)
 		return
@@ -767,7 +767,7 @@ func (a *App) render(w http.ResponseWriter, page string, data any) {
 		data = map[string]any{}
 	}
 
-	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
+	if err := tmpl.Execute(w, data); err != nil {
 		serverError(w, err)
 	}
 }

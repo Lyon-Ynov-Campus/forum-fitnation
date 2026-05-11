@@ -1,55 +1,88 @@
-{{define "title"}}Admin | FITNATION{{end}}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <div class="nav-links">
+        <a href="/">Feed</a>
+        <a href="/posts/new">Publier</a>
+        <a href="/network">Réseau</a>
+        <a href="/profile">Profil</a>
+        <a href="/admin">Admin</a>
+        <form class="logout-form" method="POST" action="/logout">
+          <button type="submit">Déconnexion</button>
+        </form>
+      </div>
+    </nav>
+  </header>
 
-{{define "content"}}
-<section class="page-shell">
-  <h1>Panel Admin</h1>
+  <main class="app-main">
+    <section class="page-shell">
+      <h1 style="margin-bottom: 24px;">Panel Admin</h1>
 
-  <h2>Utilisateurs</h2>
-  <table class="admin-table">
-    <thead>
-      <tr>
-        <th>Utilisateur</th>
-        <th>Email</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Users}}
-      <tr>
-        <td>{{.Username}}</td>
-        <td>{{.Email}}</td>
-        <td><button class="button danger">Bannir</button></td>
-      </tr>
-      {{else}}
-      <tr>
-        <td colspan="3">Aucun utilisateur</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
+      <h2 style="margin-bottom: 16px;">Utilisateurs</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Users}}
+          <tr>
+            <td>{{.Username}}</td>
+            <td>{{.Email}}</td>
+            <td><button class="button danger">Bannir</button></td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="3">Aucun utilisateur</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
 
-  <h2>Posts</h2>
-  <table class="admin-table">
-    <thead>
-      <tr>
-        <th>Titre</th>
-        <th>Auteur</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{range .Posts}}
-      <tr>
-        <td>{{.Title}}</td>
-        <td>{{.Author}}</td>
-        <td><button class="button danger">Supprimer</button></td>
-      </tr>
-      {{else}}
-      <tr>
-        <td colspan="3">Aucun post</td>
-      </tr>
-      {{end}}
-    </tbody>
-  </table>
-</section>
-{{end}}
+      <h2 style="margin-bottom: 16px;">Posts</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Titre</th>
+            <th>Auteur</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Posts}}
+          <tr>
+            <td>{{.Title}}</td>
+            <td>{{.Author}}</td>
+            <td><button class="button danger">Supprimer</button></td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="3">Aucun post</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

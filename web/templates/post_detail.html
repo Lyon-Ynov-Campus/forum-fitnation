@@ -1,89 +1,144 @@
-{{define "title"}}{{.Post.Title}} | FITNATION{{end}}
-
-{{define "content"}}
-<section class="page-shell" style="max-width: 800px;">
-  <article class="card post-detail">
-    <div class="post-meta">
-      <span class="avatar small">FN</span>
-      <div>
-        <strong>{{.Post.Author}}</strong>
-        <span>{{.Post.CreatedAt}}</span>
-      </div>
-    </div>
-
-    <h1>{{.Post.Title}}</h1>
-
-    {{if .Post.ImageURL}}
-    <img class="post-image" src="{{.Post.ImageURL}}" alt="{{.Post.Title}}">
-    {{end}}
-
-    <div class="post-content" style="margin: 20px 0; white-space: pre-wrap;">{{.Post.Content}}</div>
-
-    {{if .Post.Tags}}
-    <div class="tag-row">
-      {{range .Post.Tags}}<span>{{.}}</span>{{end}}
-    </div>
-    {{end}}
-
-    <div class="post-footer">
-      <div class="post-stats">
-        <span><strong data-like-count>{{.Post.LikesCount}}</strong> likes</span>
-        <span>{{.Post.CommentsCount}} commentaires</span>
-      </div>
-      <div class="post-actions owner-actions">
-        <button class="button icon like-button{{if .Post.Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.Post.ID}}">
-          <span data-like-label>{{if .Post.Liked}}Lik&#233;{{else}}Like{{end}}</span>
-        </button>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Post.Title}} | FITNATION</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="/">
+        <span class="brand-mark">FN</span>
+        <span>FITNATION</span>
+      </a>
+      <button class="nav-toggle" type="button" data-menu-toggle aria-label="Ouvrir le menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" data-menu>
+        <a href="/">Feed</a>
         {{if .CurrentUser}}
-        <a class="button soft" href="/posts/{{.Post.ID}}/edit">Modifier</a>
-        <form method="POST" action="/posts/{{.Post.ID}}/delete" style="display:inline;">
-          <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+        <a href="/posts/new">Publier</a>
+        <a href="/network">Réseau</a>
+        <a href="/profile">Profil</a>
+        <a href="/admin">Admin</a>
+        <form class="logout-form" method="POST" action="/logout">
+          <button type="submit">Déconnexion</button>
         </form>
+        {{else}}
+        <a class="nav-login" href="/login">Connexion</a>
+        <a href="/register">Inscription</a>
         {{end}}
       </div>
-    </div>
-  </article>
+    </nav>
+  </header>
 
-  <section class="comments-section" style="margin-top: 24px;">
-    <div class="section-title">
-      <h2>Commentaires</h2>
-    </div>
-
-    {{if .CurrentUser}}
-    <form class="card form comment-form" method="POST" action="/api/comments/create">
-      <input type="hidden" name="post_id" value="{{.Post.ID}}">
-      <label>
-        Ajouter un commentaire
-        <textarea name="content" rows="3" required placeholder="Partage ton avis..."></textarea>
-      </label>
-      <button class="button primary" type="submit">Commenter</button>
-    </form>
-    {{end}}
-
-    <div class="comment-list">
-      {{range .Comments}}
-      <article class="card comment-card">
+  <main class="app-main">
+    <section class="page-shell" style="max-width: 800px;">
+      <article class="card post-detail">
         <div class="post-meta">
           <span class="avatar small">FN</span>
           <div>
-            <strong>{{.Author}}</strong>
-            <span>{{.CreatedAt}}</span>
+            <strong>{{.Post.Author}}</strong>
+            <span>{{.Post.CreatedAt}}</span>
           </div>
         </div>
-        <p>{{.Content}}</p>
-        <div class="comment-actions" style="margin-top: 10px;">
-          <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
-            <button class="button soft" type="submit" data-confirm="Supprimer ce commentaire ?" style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
-          </form>
+
+        <h1>{{.Post.Title}}</h1>
+
+        {{if .Post.ImageURL}}
+        <img class="post-image" src="{{.Post.ImageURL}}" alt="{{.Post.Title}}">
+        {{end}}
+
+        <div class="post-content" style="margin: 20px 0; white-space: pre-wrap;">{{.Post.Content}}</div>
+
+        {{if .Post.Tags}}
+        <div class="tag-row">
+          {{range .Post.Tags}}<span>{{.}}</span>{{end}}
+        </div>
+        {{end}}
+
+        <div class="post-footer">
+          <div class="post-stats">
+            <span><strong data-like-count>{{.Post.LikesCount}}</strong> likes</span>
+            <span>{{.Post.CommentsCount}} commentaires</span>
+          </div>
+          <div class="post-actions owner-actions">
+            <button class="button icon like-button{{if .Post.Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.Post.ID}}">
+              <span data-like-label>{{if .Post.Liked}}Liké{{else}}Like{{end}}</span>
+            </button>
+            {{if .CurrentUser}}
+            <a class="button soft" href="/posts/{{.Post.ID}}/edit">Modifier</a>
+            <form method="POST" action="/posts/{{.Post.ID}}/delete" style="display:inline;">
+              <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+            </form>
+            {{end}}
+          </div>
         </div>
       </article>
-      {{else}}
-      <div class="empty-state">
-        <h2>Aucun commentaire</h2>
-        <p>Sois le premier &#224; r&#233;agir.</p>
-      </div>
-      {{end}}
-    </div>
-  </section>
-</section>
-{{end}}
+
+      <section class="comments-section" style="margin-top: 24px;">
+        <div class="section-title">
+          <h2>Commentaires</h2>
+        </div>
+
+        {{if .CurrentUser}}
+        <form class="card form comment-form" method="POST" action="/api/comments/create">
+          <input type="hidden" name="post_id" value="{{.Post.ID}}">
+          <label>
+            Ajouter un commentaire
+            <textarea name="content" rows="3" required placeholder="Partage ton avis..."></textarea>
+          </label>
+          <button class="button primary" type="submit">Commenter</button>
+        </form>
+        {{end}}
+
+        <div class="comment-list">
+          {{range .Comments}}
+          <article class="card comment-card">
+            <div class="post-meta">
+              <span class="avatar small">FN</span>
+              <div>
+                <strong>{{.Author}}</strong>
+                <span>{{.CreatedAt}}</span>
+              </div>
+            </div>
+            <p>{{.Content}}</p>
+            {{if $.CurrentUser}}
+            <div class="comment-actions" style="margin-top: 10px;">
+              <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
+                <button class="button soft" type="submit" data-confirm="Supprimer ce commentaire ?" style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
+              </form>
+            </div>
+            {{end}}
+          </article>
+          {{else}}
+          <div class="empty-state">
+            <h2>Aucun commentaire</h2>
+            <p>Sois le premier à réagir.</p>
+          </div>
+          {{end}}
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navigation mobile">
+    <a href="/">&#8962;</a>
+    <a href="/network">&#9906;</a>
+    {{if .CurrentUser}}
+    <a class="bottom-create" href="/posts/new">+</a>
+    <a href="/profile">&#9673;</a>
+    {{else}}
+    <a class="bottom-create" href="/login">+</a>
+    <a href="/login">&#8618;</a>
+    {{end}}
+  </nav>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

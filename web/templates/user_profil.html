@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Réseau | FITNATION</title>
+  <title>{{.Member.Username}} | FITNATION</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,33 +38,58 @@
   </header>
 
   <main class="app-main">
-    <section class="page-shell">
-      <div class="page-heading">
-        <p class="eyebrow">Communauté</p>
-        <h1>Réseau FITNATION</h1>
-      </div>
-
-      <div class="tools-bar">
-        <label class="search-field">
-          <span>Rechercher un membre</span>
-          <input type="search" data-search-input data-search-target=".member-card" placeholder="Pseudo ou description...">
-        </label>
-      </div>
-
-      <div class="member-grid">
-        {{range .Users}}
-        <a href="/users/{{.ID}}" class="card member-card" data-search-text="{{.Username}} {{.Bio}}">
-          <img class="member-photo" src="{{.AvatarURL}}" alt="{{.Username}}">
-          <div class="member-body">
-            <h2>{{.Username}}</h2>
-            <p>{{.Bio}}</p>
-            <span>{{.PostsCount}} posts</span>
+    <section class="page-shell profile-page">
+      <section class="profile-hero card">
+        <div class="profile-topline">
+          <img class="profile-photo" src="{{.Member.AvatarURL}}" alt="Photo de {{.Member.Username}}">
+          <div>
+            <h1>{{.Member.Username}}</h1>
+            <p>{{.Member.Bio}}</p>
           </div>
-        </a>
+        </div>
+        <div class="profile-stats">
+          <div>
+            <strong>{{.Stats.PostsCount}}</strong>
+            <span>Posts</span>
+          </div>
+          <div>
+            <strong>{{.Stats.CommentsCount}}</strong>
+            <span>Commentaires</span>
+          </div>
+          <div>
+            <strong>{{.Stats.LikesReceived}}</strong>
+            <span>Likes reçus</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-title" style="margin-top: 24px;">
+        <h2>Posts de {{.Member.Username}}</h2>
+      </div>
+
+      <div class="post-list">
+        {{range .Posts}}
+        <article class="card post-card">
+          <div class="post-meta">
+            <span class="avatar small">FN</span>
+            <div>
+              <strong>{{.Title}}</strong>
+              <span>{{.CreatedAt}}</span>
+            </div>
+          </div>
+          <p>{{.Content}}</p>
+          <div class="post-footer">
+            <div class="post-stats">
+              <span>{{.LikesCount}} likes</span>
+              <span>{{.CommentsCount}} commentaires</span>
+            </div>
+            <a class="button primary" href="/posts/{{.ID}}">Voir</a>
+          </div>
+        </article>
         {{else}}
-        <div class="empty-state" style="grid-column: 1 / -1;">
-          <h2>Aucun membre trouvé</h2>
-          <p>Les profils apparaîtront ici quand la communauté grandira.</p>
+        <div class="empty-state">
+          <h2>Aucun post publié</h2>
+          <p>Ce membre n'a pas encore publié.</p>
         </div>
         {{end}}
       </div>
