@@ -1,7 +1,6 @@
 package main
 
 import (
-	 
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
@@ -86,7 +85,7 @@ func main() {
 	mux.HandleFunc("/admin", app.admin)
 	mux.HandleFunc("/users/", app.userProfile)
 	mux.HandleFunc("/api/comments/update", app.updateComment)
-    mux.HandleFunc("/api/posts/search", app.searchPosts)
+	mux.HandleFunc("/api/posts/search", app.searchPosts)
 	mux.Handle("/static/avatars/", http.StripPrefix("/static/avatars/", http.FileServer(http.Dir("web/static/avatars"))))
 
 	log.Println("FITNATION lancé sur http://localhost:8000")
@@ -95,7 +94,7 @@ func main() {
 
 func (a *App) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 	if r.Method != http.MethodGet {
@@ -164,7 +163,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user == nil || !checkPassword(r.FormValue("password"), user.PasswordHash) {
-			http.Error(w, "Identifiants incorrects", http.StatusUnauthorized)
+			renderError(w, http.StatusUnauthorized, "Identifiants incorrects")
 			return
 		}
 
@@ -222,7 +221,7 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 		confirm := r.FormValue("password_confirm")
 
 		if fullName == "" || email == "" || username == "" || password == "" || password != confirm {
-			http.Error(w, "Formulaire invalide", http.StatusBadRequest)
+			renderError(w, http.StatusBadRequest, "Formulaire invalide")
 			return
 		}
 
@@ -234,7 +233,7 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 
 		userID, err := a.store.CreateUser(fullName, username, email, passwordHash)
 		if err != nil {
-			http.Error(w, "Email ou pseudo déjà utilisé", http.StatusBadRequest)
+			renderError(w, http.StatusBadRequest, "Email ou pseudo déjà utilisé")
 			return
 		}
 
@@ -309,7 +308,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		token := strings.TrimSpace(r.URL.Query().Get("token"))
 		if token == "" {
-			http.NotFound(w, r)
+			notFound(w)
 			return
 		}
 
@@ -319,7 +318,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user == nil {
-			http.Error(w, "Lien invalide ou expiré", http.StatusBadRequest)
+			notFound(w)
 			return
 		}
 
@@ -334,7 +333,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		confirm := r.FormValue("password_confirm")
 		if token == "" || password == "" || password != confirm {
-			http.Error(w, "Formulaire invalide", http.StatusBadRequest)
+			renderError(w, http.StatusBadRequest, "Formulaire invalide")
 			return
 		}
 
@@ -344,7 +343,7 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if user == nil {
-			http.Error(w, "Lien invalide ou expiré", http.StatusBadRequest)
+			notFound(w)
 			return
 		}
 
@@ -419,7 +418,7 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 	email := strings.TrimSpace(r.FormValue("email"))
 	password := r.FormValue("password")
 	if username == "" || email == "" {
-		http.Error(w, "Pseudo et email obligatoires", http.StatusBadRequest)
+		renderError(w, http.StatusBadRequest, "Pseudo et email obligatoires")
 		return
 	}
 
@@ -434,7 +433,7 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.store.UpdateUser(user.ID, username, email, passwordHash); err != nil {
-		http.Error(w, "Impossible de mettre à jour le profil", http.StatusBadRequest)
+		renderError(w, http.StatusBadRequest, "Impossible de mettre à jour le profil")
 		return
 	}
 
@@ -560,7 +559,7 @@ func (a *App) createPost(w http.ResponseWriter, r *http.Request) {
 	imageURL := strings.TrimSpace(r.FormValue("image_url"))
 	tags := cleanTags(r.FormValue("tags"))
 	if title == "" || content == "" {
-		http.Error(w, "Titre et contenu obligatoires", http.StatusBadRequest)
+		renderError(w, http.StatusBadRequest, "Titre et contenu obligatoires")
 		return
 	}
 
@@ -576,13 +575,13 @@ func (a *App) createPost(w http.ResponseWriter, r *http.Request) {
 func (a *App) postsRouter(w http.ResponseWriter, r *http.Request) {
 	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/posts/"))
 	if len(parts) == 0 {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
 	postID, err := strconv.Atoi(parts[0])
 	if err != nil {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -603,7 +602,7 @@ func (a *App) postsRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.NotFound(w, r)
+	notFound(w)
 }
 
 func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
@@ -615,7 +614,7 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 
 	post, err := a.store.PostByID(postID, userID)
 	if err != nil || post == nil {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -668,7 +667,7 @@ func (a *App) editPost(w http.ResponseWriter, r *http.Request, postID int) {
 
 	post, err := a.store.PostByID(postID, user.ID)
 	if err != nil || post.UserID != user.ID {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -693,7 +692,7 @@ func (a *App) updatePost(w http.ResponseWriter, r *http.Request, postID int) {
 	imageURL := strings.TrimSpace(r.FormValue("image_url"))
 	tags := cleanTags(r.FormValue("tags"))
 	if title == "" || content == "" {
-		http.Error(w, "Titre et contenu obligatoires", http.StatusBadRequest)
+		renderError(w, http.StatusBadRequest, "Titre et contenu obligatoires")
 		return
 	}
 
@@ -733,13 +732,13 @@ func (a *App) likePost(w http.ResponseWriter, r *http.Request) {
 
 	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/api/posts/"))
 	if len(parts) != 2 || parts[1] != "like" {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
 	postID, err := strconv.Atoi(parts[0])
 	if err != nil {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -779,7 +778,7 @@ func (a *App) createComment(w http.ResponseWriter, r *http.Request) {
 
 	content := strings.TrimSpace(r.FormValue("content"))
 	if content == "" {
-		http.Error(w, "Commentaire vide", http.StatusBadRequest)
+		renderError(w, http.StatusBadRequest, "Commentaire vide")
 		return
 	}
 
@@ -794,7 +793,7 @@ func (a *App) createComment(w http.ResponseWriter, r *http.Request) {
 func (a *App) commentsRouter(w http.ResponseWriter, r *http.Request) {
 	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/api/comments/"))
 	if len(parts) != 2 || parts[1] != "delete" || r.Method != http.MethodPost {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -805,7 +804,7 @@ func (a *App) commentsRouter(w http.ResponseWriter, r *http.Request) {
 
 	commentID, err := strconv.Atoi(parts[0])
 	if err != nil {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -856,13 +855,13 @@ func (a *App) userProfile(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/users/")
 	userID, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
 	member, err := a.store.UserByID(userID)
 	if err != nil || member == nil {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -953,7 +952,7 @@ func (a *App) updateComment(w http.ResponseWriter, r *http.Request) {
 
 	content := strings.TrimSpace(r.FormValue("content"))
 	if content == "" {
-		http.Error(w, "Commentaire vide", http.StatusBadRequest)
+		renderError(w, http.StatusBadRequest, "Commentaire vide")
 		return
 	}
 
@@ -997,8 +996,8 @@ func (a *App) searchPosts(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	type postJSON struct {
-		ID    int    `json:"id"`
-		Title string `json:"title"`
+		ID     int    `json:"id"`
+		Title  string `json:"title"`
 		Author string `json:"author"`
 	}
 	var result []postJSON
@@ -1178,15 +1177,32 @@ func redirectBack(w http.ResponseWriter, r *http.Request, fallback string) {
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
 
+func renderError(w http.ResponseWriter, code int, msg string) {
+	w.WriteHeader(code)
+	tmpl, err := template.ParseFiles("web/templates/layout.html", "web/templates/error.html")
+	if err != nil {
+		http.Error(w, msg, code)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "layout", map[string]any{
+		"ErrorCode":    code,
+		"ErrorMessage": msg,
+	})
+}
+
 func methodNotAllowed(w http.ResponseWriter) {
-	http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+	renderError(w, http.StatusMethodNotAllowed, "Méthode non autorisée")
 }
 
 func badRequest(w http.ResponseWriter) {
-	http.Error(w, "Requête invalide", http.StatusBadRequest)
+	renderError(w, http.StatusBadRequest, "Requête invalide")
 }
 
 func serverError(w http.ResponseWriter, err error) {
-	log.Println(err)
-	http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+	log.Println("Erreur Serveur:", err)
+	renderError(w, http.StatusInternalServerError, "Erreur interne du serveur")
+}
+
+func notFound(w http.ResponseWriter) {
+	renderError(w, http.StatusNotFound, "Page introuvable")
 }
