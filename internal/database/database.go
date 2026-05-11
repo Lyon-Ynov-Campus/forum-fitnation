@@ -509,3 +509,84 @@ func splitTags(value string) []string {
 	}
 	return tags
 }
+
+// UpdateAvatar met à jour l'URL de l'avatar d'un utilisateur
+func (s *Store) UpdateAvatar(userID int, avatarURL string) error {
+	_, err := s.DB.Exec(`UPDATE users SET avatar_url = ? WHERE id = ?`, avatarURL, userID)
+	return err
+}
+
+// UpdateComment modifie le contenu d'un commentaire (uniquement par son auteur)
+func (s *Store) UpdateComment(id, userID int, content string) error {
+	_, err := s.DB.Exec(
+		`UPDATE comments SET content = ? WHERE id = ? AND user_id = ?`,
+		content, id, userID,
+	)
+	return err
+}
+
+// SearchPostsByTitle retourne les posts dont le titre contient la query
+func (s *Store) SearchPostsByTitle(query string, currentUserID int) ([]models.Post, error) {
+	likeQuery := "%" + strings.ToLower(query) + "%"
+	rows, err := s.DB.Query(
+		`SELECT p.id, p.user_id, u.username, p.title, p.content, p.image_url, p.tags, p.created_at,
+			COUNT(DISTINCT pl.user_id) AS likes_count,
+			COUNT(DISTINCT c.id) AS comments_count,
+			MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS liked
+		FROM posts p
+		JOIN users u ON u.id = p.user_id
+		LEFT JOIN post_likes pl ON pl.post_id = p.id
+		LEFT JOIN comments c ON c.post_id = p.id
+		WHERE lower(p.title) LIKE ?
+		GROUP BY p.id
+		ORDER BY p.created_at DESC`,
+		currentUserID, likeQuery,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		post, err := scanPostRows(rows)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	return posts, rows.Err()
+}
+
+// ListUsersEnriched retourne les utilisateurs avec leurs stats complètes
+func (s *Store) ListUsersEnriched() ([]models.UserEnriched, error) {
+	rows, err := s.DB.Query(
+		`SELECT u.id, u.full_name, u.username, u.email, u.avatar_url, u.bio,
+			COUNT(DISTINCT p.id) AS posts_count,
+			COUNT(DISTINCT c.id) AS comments_count,
+			COUNT(DISTINCT pl.post_id) AS likes_received,
+			u.created_at
+		FROM users u
+		LEFT JOIN posts p ON p.user_id = u.id
+		LEFT JOIN comments c ON c.user_id = u.id
+		LEFT JOIN post_likes pl ON pl.post_id IN (SELECT id FROM posts WHERE user_id = u.id)
+		GROUP BY u.id
+		ORDER BY posts_count DESC`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.UserEnriched
+	for rows.Next() {
+		var u models.UserEnriched
+		if err := rows.Scan(&u.ID, &u.FullName, &u.Username, &u.Email, &u.AvatarURL, &u.Bio,
+			&u.PostsCount, &u.CommentsCount, &u.LikesReceived, &u.CreatedAt); err != nil {
+			return nil, err
+		}
+		u.Username = displayUsername(u.Username)
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
