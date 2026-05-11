@@ -12,6 +12,20 @@ type User struct {
 	CreatedAt    string
 }
 
+// UserEnriched est utilisé pour la page Réseau avec stats complètes
+type UserEnriched struct {
+	ID            int
+	FullName      string
+	Username      string
+	Email         string
+	AvatarURL     string
+	Bio           string
+	PostsCount    int
+	CommentsCount int
+	LikesReceived int
+	CreatedAt     string
+}
+
 type Post struct {
 	ID            int
 	UserID        int
