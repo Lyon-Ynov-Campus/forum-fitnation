@@ -1,0 +1,96 @@
+{{ define "content" }}
+<section class="page-header">
+  <div class="container">
+    <h1>Profil membre</h1>
+    <p>Consulte les informations publiques, les statistiques et les publications de ce membre.</p>
+  </div>
+</section>
+
+<section class="profile-page">
+  <div class="container">
+    <div class="profile-card">
+      <div class="profile-card__top">
+        <img
+          src="{{ if .Member.AvatarURL }}{{ .Member.AvatarURL }}{{ else }}/static/images/avatar.svg{{ end }}"
+          alt="Avatar de {{ .Member.Username }}"
+          class="profile-avatar"
+        />
+
+        <div class="profile-card__info">
+          <h2>{{ .Member.Username }}</h2>
+
+          {{ if .Member.FullName }}
+          <p class="profile-fullname">{{ .Member.FullName }}</p>
+          {{ end }}
+
+          {{ if .Member.Bio }}
+          <p class="profile-bio">{{ .Member.Bio }}</p>
+          {{ else }}
+          <p class="profile-bio profile-bio--muted">Ce membre n'a pas encore ajouté de bio.</p>
+          {{ end }}
+        </div>
+      </div>
+
+      <div class="profile-stats">
+        <div class="stat-box">
+          <strong>{{ .Stats.PostsCount }}</strong>
+          <span>Posts</span>
+        </div>
+
+        <div class="stat-box">
+          <strong>{{ .Stats.CommentsCount }}</strong>
+          <span>Commentaires</span>
+        </div>
+
+        <div class="stat-box">
+          <strong>{{ .Stats.LikesReceived }}</strong>
+          <span>Likes reçus</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-posts">
+      <div class="section-title-row">
+        <h3>Publications</h3>
+      </div>
+
+      {{ if .Posts }}
+        <div class="posts-list">
+          {{ range .Posts }}
+            <article class="post-card">
+              <div class="post-card__content">
+                <h4>
+                  <a href="/posts/{{ .ID }}">{{ .Title }}</a>
+                </h4>
+
+                <p class="post-meta">
+                  Publié le {{ .CreatedAt }}
+                </p>
+
+                <p>{{ .Content }}</p>
+
+                {{ if .Tags }}
+                <div class="post-tags">
+                  {{ range .Tags }}
+                    <span class="tag">#{{ . }}</span>
+                  {{ end }}
+                </div>
+                {{ end }}
+
+                <div class="post-stats">
+                  <span>{{ .LikesCount }} likes</span>
+                  <span>{{ .CommentsCount }} commentaires</span>
+                </div>
+              </div>
+            </article>
+          {{ end }}
+        </div>
+      {{ else }}
+        <div class="empty-state">
+          <p>Ce membre n'a pas encore publié de post.</p>
+        </div>
+      {{ end }}
+    </div>
+  </div>
+</section>
+{{ end }}
