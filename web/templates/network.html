@@ -16,7 +16,7 @@
 
   <div class="member-grid">
     {{range .Users}}
-    <article class="card member-card" data-search-text="{{.Username}} {{.Bio}}">
+    <a href="/users/{{.ID}}" class="card member-card" data-search-text="{{.Username}} {{.Bio}}">
       <img class="member-photo" src="{{.AvatarURL}}" alt="{{.Username}}">
       <div class="member-body">
         <h2>{{.Username}}</h2>

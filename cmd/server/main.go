@@ -83,6 +83,7 @@ func main() {
 	mux.HandleFunc("/api/comments/create", app.createComment)
 	mux.HandleFunc("/api/comments/", app.commentsRouter)
 	mux.HandleFunc("/admin", app.admin)
+	mux.HandleFunc("/users/", app.userProfile)
 
 	log.Println("FITNATION lancé sur http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", mux))
@@ -104,7 +105,17 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		userID = user.ID
 	}
 
-	posts, err := a.store.ListPosts(userID)
+	sort := r.URL.Query().Get("sort")
+	period := r.URL.Query().Get("date")
+	minLikesStr := r.URL.Query().Get("likes")
+	minLikes := 0
+	if minLikesStr != "" {
+		if v, err := strconv.Atoi(minLikesStr); err == nil && v >= 0 {
+			minLikes = v
+		}
+	}
+
+	posts, err := a.store.ListPosts(userID, sort, minLikes, period)
 	if err != nil {
 		serverError(w, err)
 		return
@@ -120,6 +131,7 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		"CurrentUser": user,
 		"Posts":       posts,
 		"Users":       users,
+		"Sort":        sort,
 	})
 }
 
@@ -750,7 +762,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := a.store.ListPosts(user.ID)
+	posts, err := a.store.ListPosts(user.ID, "", 0, "")
 	if err != nil {
 		serverError(w, err)
 		return
@@ -760,6 +772,45 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		"CurrentUser": user,
 		"Users":       users,
 		"Posts":       posts,
+	})
+}
+
+func (a *App) userProfile(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/users/")
+	userID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	member, err := a.store.UserByID(userID)
+	if err != nil || member == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	posts, err := a.store.UserPosts(userID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	stats, err := a.store.StatsForUser(userID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	a.render(w, "user_profile.html", map[string]any{
+		"CurrentUser": a.currentUser(r),
+		"Member":      member,
+		"Posts":       posts,
+		"Stats":       stats,
 	})
 }
 

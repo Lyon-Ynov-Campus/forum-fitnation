@@ -1,0 +1,61 @@
+{{define "title"}}{{.Member.Username}} | FITNATION{{end}}
+
+{{define "content"}}
+<section class="page-shell profile-page">
+  <section class="profile-hero card">
+    <div class="profile-topline">
+      <img class="profile-photo" src="{{.Member.AvatarURL}}" alt="Photo de {{.Member.Username}}">
+      <div>
+        <h1>{{.Member.Username}}</h1>
+        <p>{{.Member.Bio}}</p>
+      </div>
+    </div>
+
+    <div class="profile-stats">
+      <div>
+        <strong>{{.Stats.PostsCount}}</strong>
+        <span>Posts</span>
+      </div>
+      <div>
+        <strong>{{.Stats.CommentsCount}}</strong>
+        <span>Commentaires</span>
+      </div>
+      <div>
+        <strong>{{.Stats.LikesReceived}}</strong>
+        <span>Likes reçus</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-title" style="margin-top: 24px;">
+    <h2>Posts de {{.Member.Username}}</h2>
+  </div>
+
+  <div class="post-list">
+    {{range .Posts}}
+    <article class="card post-card">
+      <div class="post-meta">
+        <span class="avatar small">FN</span>
+        <div>
+          <strong>{{.Title}}</strong>
+          <span>{{.CreatedAt}}</span>
+        </div>
+      </div>
+      <p>{{.Content}}</p>
+      <div class="post-footer">
+        <div class="post-stats">
+          <span>{{.LikesCount}} likes</span>
+          <span>{{.CommentsCount}} commentaires</span>
+        </div>
+        <a class="button primary" href="/posts/{{.ID}}">Voir</a>
+      </div>
+    </article>
+    {{else}}
+    <div class="empty-state">
+      <h2>Aucun post publié</h2>
+      <p>Ce membre n'a pas encore publié.</p>
+    </div>
+    {{end}}
+  </div>
+</section>
+{{end}}

@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -115,15 +116,11 @@ func (s *Store) Migrate() error {
 func (s *Store) CreateUser(fullName, username, email, passwordHash string) (int, error) {
 	result, err := s.DB.Exec(
 		`INSERT INTO users (full_name, username, email, password_hash) VALUES (?, ?, ?, ?)`,
-		fullName,
-		username,
-		email,
-		passwordHash,
+		fullName, username, email, passwordHash,
 	)
 	if err != nil {
 		return 0, err
 	}
-
 	id, err := result.LastInsertId()
 	return int(id), err
 }
@@ -131,34 +128,27 @@ func (s *Store) CreateUser(fullName, username, email, passwordHash string) (int,
 func (s *Store) UserByEmailOrUsername(identifier string) (*models.User, error) {
 	row := s.DB.QueryRow(
 		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at
-		FROM users
-		WHERE email = ? OR username = ?`,
-		identifier,
-		identifier,
+		FROM users WHERE email = ? OR username = ?`,
+		identifier, identifier,
 	)
-
 	return scanUser(row)
 }
 
 func (s *Store) UserByEmail(email string) (*models.User, error) {
 	row := s.DB.QueryRow(
 		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at
-		FROM users
-		WHERE email = ?`,
+		FROM users WHERE email = ?`,
 		email,
 	)
-
 	return scanUser(row)
 }
 
 func (s *Store) UserByID(id int) (*models.User, error) {
 	row := s.DB.QueryRow(
 		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at
-		FROM users
-		WHERE id = ?`,
+		FROM users WHERE id = ?`,
 		id,
 	)
-
 	return scanUser(row)
 }
 
@@ -167,13 +157,9 @@ func (s *Store) UpdateUser(id int, username, email, passwordHash string) error {
 		_, err := s.DB.Exec(`UPDATE users SET username = ?, email = ? WHERE id = ?`, username, email, id)
 		return err
 	}
-
 	_, err := s.DB.Exec(
 		`UPDATE users SET username = ?, email = ?, password_hash = ? WHERE id = ?`,
-		username,
-		email,
-		passwordHash,
-		id,
+		username, email, passwordHash, id,
 	)
 	return err
 }
@@ -210,16 +196,13 @@ func (s *Store) ListUsers() ([]models.User, error) {
 		user.Username = displayUsername(user.Username)
 		users = append(users, user)
 	}
-
 	return users, rows.Err()
 }
 
 func (s *Store) CreateSession(token string, userID int, expiresAt time.Time) error {
 	_, err := s.DB.Exec(
 		`INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)`,
-		token,
-		userID,
-		expiresAt.UTC().Format(time.RFC3339),
+		token, userID, expiresAt.UTC().Format(time.RFC3339),
 	)
 	return err
 }
@@ -230,10 +213,8 @@ func (s *Store) UserBySession(token string) (*models.User, error) {
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
 		WHERE s.token = ? AND s.expires_at > ?`,
-		token,
-		time.Now().UTC().Format(time.RFC3339),
+		token, time.Now().UTC().Format(time.RFC3339),
 	)
-
 	return scanUser(row)
 }
 
@@ -247,12 +228,9 @@ func (s *Store) CreatePasswordReset(token string, userID int, expiresAt time.Tim
 	if err != nil {
 		return err
 	}
-
 	_, err = s.DB.Exec(
 		`INSERT INTO password_resets (token, user_id, expires_at) VALUES (?, ?, ?)`,
-		token,
-		userID,
-		expiresAt.UTC().Format(time.RFC3339),
+		token, userID, expiresAt.UTC().Format(time.RFC3339),
 	)
 	return err
 }
@@ -263,10 +241,8 @@ func (s *Store) UserByPasswordReset(token string) (*models.User, error) {
 		FROM password_resets pr
 		JOIN users u ON u.id = pr.user_id
 		WHERE pr.token = ? AND pr.expires_at > ?`,
-		token,
-		time.Now().UTC().Format(time.RFC3339),
+		token, time.Now().UTC().Format(time.RFC3339),
 	)
-
 	return scanUser(row)
 }
 
@@ -275,9 +251,27 @@ func (s *Store) DeletePasswordReset(token string) error {
 	return err
 }
 
-func (s *Store) ListPosts(currentUserID int) ([]models.Post, error) {
-	rows, err := s.DB.Query(
-		`SELECT p.id, p.user_id, u.username, p.title, p.content, p.image_url, p.tags, p.created_at,
+func (s *Store) ListPosts(currentUserID int, sort string, minLikes int, period string) ([]models.Post, error) {
+	orderBy := "p.created_at DESC"
+	switch sort {
+	case "likes":
+		orderBy = "likes_count DESC"
+	case "comments":
+		orderBy = "comments_count DESC"
+	}
+
+	periodFilter := ""
+	switch period {
+	case "today":
+		periodFilter = "AND date(p.created_at) = date('now')"
+	case "week":
+		periodFilter = "AND p.created_at >= datetime('now', '-7 days')"
+	case "month":
+		periodFilter = "AND p.created_at >= datetime('now', '-30 days')"
+	}
+
+	query := fmt.Sprintf(`
+		SELECT p.id, p.user_id, u.username, p.title, p.content, p.image_url, p.tags, p.created_at,
 			COUNT(DISTINCT pl.user_id) AS likes_count,
 			COUNT(DISTINCT c.id) AS comments_count,
 			MAX(CASE WHEN pl.user_id = ? THEN 1 ELSE 0 END) AS liked
@@ -285,10 +279,12 @@ func (s *Store) ListPosts(currentUserID int) ([]models.Post, error) {
 		JOIN users u ON u.id = p.user_id
 		LEFT JOIN post_likes pl ON pl.post_id = p.id
 		LEFT JOIN comments c ON c.post_id = p.id
+		WHERE 1=1 %s
 		GROUP BY p.id
-		ORDER BY p.created_at DESC`,
-		currentUserID,
-	)
+		HAVING likes_count >= ?
+		ORDER BY %s`, periodFilter, orderBy)
+
+	rows, err := s.DB.Query(query, currentUserID, minLikes)
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +298,6 @@ func (s *Store) ListPosts(currentUserID int) ([]models.Post, error) {
 		}
 		posts = append(posts, post)
 	}
-
 	return posts, rows.Err()
 }
 
@@ -334,7 +329,6 @@ func (s *Store) UserPosts(userID int) ([]models.Post, error) {
 		}
 		posts = append(posts, post)
 	}
-
 	return posts, rows.Err()
 }
 
@@ -350,8 +344,7 @@ func (s *Store) PostByID(id, currentUserID int) (*models.Post, error) {
 		LEFT JOIN comments c ON c.post_id = p.id
 		WHERE p.id = ?
 		GROUP BY p.id`,
-		currentUserID,
-		id,
+		currentUserID, id,
 	)
 
 	var post models.Post
@@ -367,17 +360,22 @@ func (s *Store) PostByID(id, currentUserID int) (*models.Post, error) {
 }
 
 func (s *Store) CreatePost(userID int, title, content, imageURL, tags string) (int, error) {
-	result, err := s.DB.Exec(`INSERT INTO posts (user_id, title, content, image_url, tags) VALUES (?, ?, ?, ?, ?)`, userID, title, content, imageURL, tags)
+	result, err := s.DB.Exec(
+		`INSERT INTO posts (user_id, title, content, image_url, tags) VALUES (?, ?, ?, ?, ?)`,
+		userID, title, content, imageURL, tags,
+	)
 	if err != nil {
 		return 0, err
 	}
-
 	id, err := result.LastInsertId()
 	return int(id), err
 }
 
 func (s *Store) UpdatePost(id, userID int, title, content, imageURL, tags string) error {
-	_, err := s.DB.Exec(`UPDATE posts SET title = ?, content = ?, image_url = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?`, title, content, imageURL, tags, id, userID)
+	_, err := s.DB.Exec(
+		`UPDATE posts SET title = ?, content = ?, image_url = ?, tags = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?`,
+		title, content, imageURL, tags, id, userID,
+	)
 	return err
 }
 
@@ -407,7 +405,6 @@ func (s *Store) ToggleLike(postID, userID int) (bool, int, error) {
 	if err := s.DB.QueryRow(`SELECT COUNT(*) FROM post_likes WHERE post_id = ?`, postID).Scan(&count); err != nil {
 		return false, 0, err
 	}
-
 	return liked, count, nil
 }
 
@@ -434,7 +431,6 @@ func (s *Store) CommentsByPost(postID int) ([]models.Comment, error) {
 		comment.Author = displayUsername(comment.Author)
 		comments = append(comments, comment)
 	}
-
 	return comments, rows.Err()
 }
 
@@ -454,20 +450,14 @@ func (s *Store) StatsForUser(userID int) (models.Stats, error) {
 	if err != nil {
 		return stats, err
 	}
-
 	err = s.DB.QueryRow(`SELECT COUNT(*) FROM comments WHERE user_id = ?`, userID).Scan(&stats.CommentsCount)
 	if err != nil {
 		return stats, err
 	}
-
 	err = s.DB.QueryRow(
-		`SELECT COUNT(*)
-		FROM post_likes pl
-		JOIN posts p ON p.id = pl.post_id
-		WHERE p.user_id = ?`,
+		`SELECT COUNT(*) FROM post_likes pl JOIN posts p ON p.id = pl.post_id WHERE p.user_id = ?`,
 		userID,
 	).Scan(&stats.LikesReceived)
-
 	return stats, err
 }
 
@@ -481,7 +471,6 @@ func scanUser(row *sql.Row) (*models.User, error) {
 		return nil, err
 	}
 	user.Username = displayUsername(user.Username)
-
 	return &user, nil
 }
 
@@ -501,14 +490,12 @@ func displayUsername(username string) string {
 	if username == "" {
 		return "membre"
 	}
-
 	if strings.Contains(username, "@") {
 		parts := strings.Split(username, "@")
 		if strings.TrimSpace(parts[0]) != "" {
 			return strings.TrimSpace(parts[0])
 		}
 	}
-
 	return username
 }
 
