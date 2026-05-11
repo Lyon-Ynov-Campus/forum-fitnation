@@ -84,6 +84,9 @@ func main() {
 	mux.HandleFunc("/api/comments/", app.commentsRouter)
 	mux.HandleFunc("/admin", app.admin)
 	mux.HandleFunc("/users/", app.userProfile)
+	mux.HandleFunc("/api/comments/update", app.updateComment)
+    mux.HandleFunc("/api/posts/search", app.searchPosts)
+	mux.Handle("/static/avatars/", http.StripPrefix("/static/avatars/", http.FileServer(http.Dir("web/static/avatars"))))
 
 	log.Println("FITNATION lancé sur http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", mux))
@@ -434,6 +437,46 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Gestion upload photo de profil
+	file, header, err := r.FormFile("avatar")
+	if err == nil {
+		defer file.Close()
+
+		ext := ".jpg"
+		if strings.Contains(header.Header.Get("Content-Type"), "png") {
+			ext = ".png"
+		} else if strings.Contains(header.Header.Get("Content-Type"), "gif") {
+			ext = ".gif"
+		} else if strings.Contains(header.Header.Get("Content-Type"), "webp") {
+			ext = ".webp"
+		}
+
+		avatarDir := "web/static/avatars"
+		if err := os.MkdirAll(avatarDir, 0755); err != nil {
+			serverError(w, err)
+			return
+		}
+
+		filename := fmt.Sprintf("avatar_%d%s", user.ID, ext)
+		destPath := avatarDir + "/" + filename
+
+		data := make([]byte, header.Size)
+		if _, err := file.Read(data); err != nil {
+			serverError(w, err)
+			return
+		}
+		if err := os.WriteFile(destPath, data, 0644); err != nil {
+			serverError(w, err)
+			return
+		}
+
+		avatarURL := "/static/avatars/" + filename
+		if err := a.store.UpdateAvatar(user.ID, avatarURL); err != nil {
+			serverError(w, err)
+			return
+		}
+	}
+
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }
 
@@ -470,7 +513,7 @@ func (a *App) network(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := a.store.ListUsers()
+	users, err := a.store.ListUsersEnriched()
 	if err != nil {
 		serverError(w, err)
 		return
@@ -570,9 +613,16 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 	}
 
 	post, err := a.store.PostByID(postID, userID)
-	if err != nil {
+	if err != nil || post == nil {
 		http.NotFound(w, r)
 		return
+	}
+
+	// Récupère l'avatar de l'auteur du post
+	postAuthor, _ := a.store.UserByID(post.UserID)
+	authorAvatar := "/static/images/avatar.svg"
+	if postAuthor != nil && postAuthor.AvatarURL != "" {
+		authorAvatar = postAuthor.AvatarURL
 	}
 
 	comments, err := a.store.CommentsByPost(postID)
@@ -581,10 +631,31 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 		return
 	}
 
+	// Enrichit chaque commentaire avec l'avatar de son auteur
+	type CommentWithAvatar struct {
+		models.Comment
+		AuthorAvatar string
+	}
+	var enrichedComments []CommentWithAvatar
+	for _, c := range comments {
+		av := "/static/images/avatar.svg"
+		cu, _ := a.store.UserByID(c.UserID)
+		if cu != nil && cu.AvatarURL != "" {
+			av = cu.AvatarURL
+		}
+		enrichedComments = append(enrichedComments, CommentWithAvatar{Comment: c, AuthorAvatar: av})
+	}
+
+	// Enrichit le post avec l'avatar
+	type PostWithAvatar struct {
+		*models.Post
+		AuthorAvatar string
+	}
+
 	a.render(w, "post_detail.html", map[string]any{
 		"CurrentUser": user,
-		"Post":        post,
-		"Comments":    comments,
+		"Post":        PostWithAvatar{Post: post, AuthorAvatar: authorAvatar},
+		"Comments":    enrichedComments,
 	})
 }
 
@@ -856,6 +927,87 @@ func (a *App) startSession(w http.ResponseWriter, userID int) error {
 		SameSite: http.SameSiteLaxMode,
 	})
 	return nil
+}
+
+func (a *App) updateComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+
+	user := a.requireUser(w, r)
+	if user == nil {
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		badRequest(w)
+		return
+	}
+
+	commentID, err := strconv.Atoi(r.FormValue("comment_id"))
+	if err != nil {
+		badRequest(w)
+		return
+	}
+
+	content := strings.TrimSpace(r.FormValue("content"))
+	if content == "" {
+		http.Error(w, "Commentaire vide", http.StatusBadRequest)
+		return
+	}
+
+	if err := a.store.UpdateComment(commentID, user.ID, content); err != nil {
+		serverError(w, err)
+		return
+	}
+
+	postIDStr := r.FormValue("post_id")
+	if postIDStr != "" {
+		http.Redirect(w, r, fmt.Sprintf("/posts/%s", postIDStr), http.StatusSeeOther)
+		return
+	}
+	redirectBack(w, r, "/")
+}
+
+func (a *App) searchPosts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		methodNotAllowed(w)
+		return
+	}
+
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	user := a.currentUser(r)
+	userID := 0
+	if user != nil {
+		userID = user.ID
+	}
+
+	var posts []models.Post
+	var err error
+	if query != "" {
+		posts, err = a.store.SearchPostsByTitle(query, userID)
+	} else {
+		posts, err = a.store.ListPosts(userID, "", 0, "")
+	}
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	type postJSON struct {
+		ID    int    `json:"id"`
+		Title string `json:"title"`
+		Author string `json:"author"`
+	}
+	var result []postJSON
+	for _, p := range posts {
+		result = append(result, postJSON{ID: p.ID, Title: p.Title, Author: p.Author})
+	}
+	if result == nil {
+		result = []postJSON{}
+	}
+	json.NewEncoder(w).Encode(result)
 }
 
 func (a *App) render(w http.ResponseWriter, page string, data any) {
