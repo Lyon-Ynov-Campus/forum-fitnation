@@ -4,7 +4,7 @@
 <section class="page-shell" style="max-width: 800px;">
   <article class="card post-detail">
     <div class="post-meta">
-      <span class="avatar small">FN</span>
+      <img class="avatar small" src="{{.Post.AuthorAvatar}}" alt="{{.Post.Author}}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
       <div>
         <strong>{{.Post.Author}}</strong>
         <span>{{.Post.CreatedAt}}</span>
@@ -32,7 +32,7 @@
       </div>
       <div class="post-actions owner-actions">
         <button class="button icon like-button{{if .Post.Liked}} is-liked{{end}}" type="button" data-like-button data-post-id="{{.Post.ID}}">
-          <span data-like-label>{{if .Post.Liked}}Lik&#233;{{else}}Like{{end}}</span>
+          <span data-like-label>{{if .Post.Liked}}Liké{{else}}Like{{end}}</span>
         </button>
         {{if .CurrentUser}}
         <a class="button soft" href="/posts/{{.Post.ID}}/edit">Modifier</a>
@@ -62,28 +62,84 @@
 
     <div class="comment-list">
       {{range .Comments}}
-      <article class="card comment-card">
+      <article class="card comment-card" id="comment-{{.ID}}">
         <div class="post-meta">
-          <span class="avatar small">FN</span>
+          <img class="avatar small" src="{{.AuthorAvatar}}" alt="{{.Author}}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
           <div>
             <strong>{{.Author}}</strong>
             <span>{{.CreatedAt}}</span>
           </div>
         </div>
-        <p>{{.Content}}</p>
-        <div class="comment-actions" style="margin-top: 10px;">
-          <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
-            <button class="button soft" type="submit" data-confirm="Supprimer ce commentaire ?" style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
+
+        <div class="comment-view" id="view-{{.ID}}">
+          <p id="text-{{.ID}}">{{.Content}}</p>
+          {{if $.CurrentUser}}
+          {{if eq $.CurrentUser.ID .UserID}}
+          <div class="comment-actions" style="margin-top: 10px; display:flex; gap:8px;">
+            <button class="button soft edit-comment-btn" type="button"
+              data-comment-id="{{.ID}}"
+              data-post-id="{{.PostID}}"
+              style="font-size: 0.8rem; padding: 6px 12px;">Modifier</button>
+            <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
+              <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?"
+                style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
+            </form>
+          </div>
+          {{end}}
+          {{end}}
+        </div>
+
+        {{if $.CurrentUser}}
+        {{if eq $.CurrentUser.ID .UserID}}
+        <div class="comment-edit" id="edit-{{.ID}}" style="display:none; margin-top: 10px;">
+          <form method="POST" action="/api/comments/update">
+            <input type="hidden" name="comment_id" value="{{.ID}}">
+            <input type="hidden" name="post_id" value="{{.PostID}}">
+            <textarea name="content" rows="3" style="width:100%; margin-bottom: 8px;" id="edit-content-{{.ID}}"></textarea>
+            <div style="display:flex; gap:8px;">
+              <button class="button primary" type="submit" style="font-size: 0.8rem; padding: 6px 12px;">Enregistrer</button>
+              <button class="button soft cancel-edit-btn" type="button"
+                data-comment-id="{{.ID}}"
+                style="font-size: 0.8rem; padding: 6px 12px;">Annuler</button>
+            </div>
           </form>
         </div>
+        {{end}}
+        {{end}}
       </article>
       {{else}}
       <div class="empty-state">
         <h2>Aucun commentaire</h2>
-        <p>Sois le premier &#224; r&#233;agir.</p>
+        <p>Sois le premier à réagir.</p>
       </div>
       {{end}}
     </div>
   </section>
 </section>
+{{end}}
+
+{{define "scripts"}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Boutons "Modifier"
+  document.querySelectorAll('.edit-comment-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.commentId;
+      var currentText = document.getElementById('text-' + id).textContent.trim();
+      document.getElementById('edit-content-' + id).value = currentText;
+      document.getElementById('view-' + id).style.display = 'none';
+      document.getElementById('edit-' + id).style.display = 'block';
+    });
+  });
+
+  // Boutons "Annuler"
+  document.querySelectorAll('.cancel-edit-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.dataset.commentId;
+      document.getElementById('edit-' + id).style.display = 'none';
+      document.getElementById('view-' + id).style.display = 'block';
+    });
+  });
+});
+</script>
 {{end}}

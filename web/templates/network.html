@@ -1,38 +1,133 @@
-{{define "title"}}R&#233;seau | FITNATION{{end}}
+{{define "title"}}Réseau | FITNATION{{end}}
 
 {{define "content"}}
 <section class="page-shell">
   <div class="page-heading">
-    <p class="eyebrow">Communaut&#233;</p>
-    <h1>R&#233;seau FITNATION</h1>
+    <p class="eyebrow">Communauté</p>
+    <h1>Réseau FITNATION</h1>
   </div>
 
-  <div class="tools-bar">
-    <label class="search-field">
+  <div class="tools-bar" style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom: 24px;">
+    <label class="search-field" style="flex:1; min-width:200px;">
       <span>Rechercher un membre</span>
-      <input type="search" data-search-input data-search-target=".member-card" placeholder="Pseudo ou description...">
+      <input type="search" data-search-input data-search-target=".member-card" placeholder="Pseudo ou bio...">
     </label>
+    <label class="search-field" style="flex:1; min-width:200px;">
+      <span>Rechercher un post par titre</span>
+      <input type="search" id="post-search-input" placeholder="Titre du post...">
+    </label>
+  </div>
+
+  <div id="post-search-results" style="display:none; margin-bottom: 24px;">
+    <div class="section-title" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
+      <h2>Résultats de recherche</h2>
+      <button class="button soft" type="button" id="close-search-btn" style="font-size:0.8rem;">✕ Fermer</button>
+    </div>
+    <div id="post-search-list" class="post-list compact"></div>
+  </div>
+
+  <div class="network-stats" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-bottom:32px;">
+    <div class="card" style="text-align:center; padding: 16px;">
+      <strong style="font-size:1.6rem; display:block;">{{len .Users}}</strong>
+      <span style="font-size:0.85rem; color:var(--color-text-muted);">Membres</span>
+    </div>
   </div>
 
   <div class="member-grid">
     {{range .Users}}
     <a href="/users/{{.ID}}" class="card member-card" data-search-text="{{.Username}} {{.Bio}}">
-      <img class="member-photo" src="{{.AvatarURL}}" alt="{{.Username}}">
-      <div class="member-body">
-        <h2>{{.Username}}</h2>
-        <p>{{.Bio}}</p>
-        <span>{{.PostsCount}} posts</span>
+      <img class="member-photo" src="{{.AvatarURL}}" alt="{{.Username}}"
+        style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin:0 auto 12px;">
+      <div class="member-body" style="text-align:center;">
+        <h2 style="font-size:1rem; margin-bottom:4px;">{{.Username}}</h2>
+        {{if .Bio}}
+        <p style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:8px;">{{.Bio}}</p>
+        {{end}}
+        <div style="display:flex; justify-content:center; gap:16px; font-size:0.8rem; color:var(--color-text-muted); margin-bottom:12px;">
+          <span>📝 {{.PostsCount}} posts</span>
+          <span>💬 {{.CommentsCount}} coms</span>
+          <span>❤️ {{.LikesReceived}} likes</span>
+        </div>
+        <span style="font-size:0.75rem; color:var(--color-text-faint);">Membre depuis {{.CreatedAt}}</span>
       </div>
-      <div class="member-actions" style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
-        <button class="button soft follow-button" type="button">Suivre</button>
+      <div class="member-actions" style="margin-top:12px; display:flex; gap:8px; justify-content:center;">
+        <button class="button soft follow-btn" type="button" style="font-size:0.85rem;">Suivre</button>
       </div>
-    </article>
+    </a>
     {{else}}
     <div class="empty-state" style="grid-column: 1 / -1;">
-      <h2>Aucun membre trouv&#233;</h2>
-      <p>Les profils appara&#238;tront ici quand la communaut&#233; grandira.</p>
+      <h2>Aucun membre trouvé</h2>
+      <p>Les profils apparaîtront ici quand la communauté grandira.</p>
     </div>
     {{end}}
   </div>
 </section>
+{{end}}
+
+{{define "scripts"}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Follow buttons
+  document.querySelectorAll('.follow-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      btn.classList.toggle('is-liked');
+      btn.textContent = btn.classList.contains('is-liked') ? 'Suivi ✓' : 'Suivre';
+      btn.style.transform = 'scale(0.92)';
+      setTimeout(function() { btn.style.transform = ''; }, 150);
+    });
+  });
+
+  // Recherche post par titre
+  var postSearchInput = document.getElementById('post-search-input');
+  var postSearchResults = document.getElementById('post-search-results');
+  var postSearchList = document.getElementById('post-search-list');
+  var closeBtn = document.getElementById('close-search-btn');
+  var searchTimer;
+
+  if (postSearchInput) {
+    postSearchInput.addEventListener('input', function() {
+      clearTimeout(searchTimer);
+      var q = postSearchInput.value.trim();
+      if (q.length < 2) {
+        postSearchResults.style.display = 'none';
+        return;
+      }
+      searchTimer = setTimeout(function() {
+        fetch('/api/posts/search?q=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            postSearchResults.style.display = 'block';
+            if (!data || data.length === 0) {
+              postSearchList.innerHTML = '<div class="empty-state" style="padding:24px;"><p>Aucun post trouvé.</p></div>';
+              return;
+            }
+            postSearchList.innerHTML = data.map(function(p) {
+              return '<a href="/posts/' + p.id + '" class="card" style="display:block;padding:14px 18px;margin-bottom:8px;text-decoration:none;">' +
+                '<strong>' + esc(p.title) + '</strong>' +
+                '<span style="display:block;font-size:0.85rem;color:var(--color-text-muted);margin-top:4px;">par ' + esc(p.author) + '</span>' +
+                '</a>';
+            }).join('');
+          })
+          .catch(function() {
+            postSearchList.innerHTML = '<p style="padding:12px;color:var(--color-error);">Erreur lors de la recherche.</p>';
+          });
+      }, 250);
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function() {
+      postSearchResults.style.display = 'none';
+      postSearchInput.value = '';
+    });
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+});
+</script>
 {{end}}

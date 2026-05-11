@@ -43,9 +43,14 @@
           Nouveau mot de passe
           <input type="password" name="password" autocomplete="new-password" placeholder="Laisser vide pour ne pas changer">
         </label>
-        <label>
+        <label style="grid-column: 1 / -1;">
           Photo de profil
-          <input type="file" name="avatar" accept="image/*">
+          <div style="display:flex; align-items:center; gap:16px; margin-top:8px;">
+            <img id="avatar-preview" src="{{.User.AvatarURL}}" alt="Aperçu"
+              style="width:64px; height:64px; border-radius:50%; object-fit:cover; border: 2px solid var(--color-border);">
+            <input type="file" name="avatar" accept="image/*" id="avatar-input"
+              onchange="previewAvatar(this)">
+          </div>
         </label>
         <button class="button primary span-two" type="submit">Enregistrer</button>
       </form>
@@ -93,3 +98,18 @@
   </section>
 </section>
 {{end}}
+
+{{define "scripts"}}
+<script>
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('avatar-preview').src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{{end}}
+
