@@ -107,13 +107,19 @@
                 <span>{{.CreatedAt}}</span>
               </div>
             </div>
-            <p>{{.Content}}</p>
+            <p id="text-{{.ID}}">{{.Content}}</p>
             {{if $.CurrentUser}}
             <div class="comment-actions" style="margin-top: 10px;">
+              <button class="button soft" data-edit-id="{{.ID}}" style="font-size: 0.8rem; padding: 6px 12px;">Modifier</button>
               <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
-                <button class="button soft" type="submit" data-confirm="Supprimer ce commentaire ?" style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
+                <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?" style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
               </form>
             </div>
+            <form id="edit-{{.ID}}" method="POST" action="/api/comments/{{.ID}}/edit" style="display:none; margin-top: 10px;">
+              <textarea name="content" style="width:100%; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--bg-root); color:var(--text-primary); margin-bottom:8px;">{{.Content}}</textarea>
+              <button class="button primary" type="submit" style="font-size: 0.8rem; padding: 6px 12px;">Enregistrer</button>
+              <button class="button soft" type="button" data-cancel-id="{{.ID}}" style="font-size: 0.8rem; padding: 6px 12px;">Annuler</button>
+            </form>
             {{end}}
           </article>
           {{else}}
@@ -140,5 +146,22 @@
   </nav>
 
   <script src="/static/js/app.js"></script>
+  <script>
+    document.querySelectorAll('[data-edit-id]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-edit-id');
+        var form = document.getElementById('edit-' + id);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
+    document.querySelectorAll('[data-cancel-id]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-cancel-id');
+        var form = document.getElementById('edit-' + id);
+        form.style.display = 'none';
+      });
+    });
+  </script>
 </body>
 </html>

@@ -439,6 +439,11 @@ func (s *Store) CreateComment(postID, userID int, content string) error {
 	return err
 }
 
+func (s *Store) UpdateComment(id, userID int, content string) error {
+	_, err := s.DB.Exec(`UPDATE comments SET content = ? WHERE id = ? AND user_id = ?`, content, id, userID)
+	return err
+}
+
 func (s *Store) DeleteComment(id, userID int) error {
 	_, err := s.DB.Exec(`DELETE FROM comments WHERE id = ? AND user_id = ?`, id, userID)
 	return err

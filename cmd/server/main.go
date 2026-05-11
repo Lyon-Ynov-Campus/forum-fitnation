@@ -721,7 +721,7 @@ func (a *App) createComment(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) commentsRouter(w http.ResponseWriter, r *http.Request) {
 	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/api/comments/"))
-	if len(parts) != 2 || parts[1] != "delete" || r.Method != http.MethodPost {
+	if len(parts) != 2 || r.Method != http.MethodPost {
 		http.NotFound(w, r)
 		return
 	}
@@ -737,8 +737,28 @@ func (a *App) commentsRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := a.store.DeleteComment(commentID, user.ID); err != nil {
-		serverError(w, err)
+	switch parts[1] {
+	case "delete":
+		if err := a.store.DeleteComment(commentID, user.ID); err != nil {
+			serverError(w, err)
+			return
+		}
+	case "edit":
+		if err := r.ParseForm(); err != nil {
+			badRequest(w)
+			return
+		}
+		content := strings.TrimSpace(r.FormValue("content"))
+		if content == "" {
+			badRequest(w)
+			return
+		}
+		if err := a.store.UpdateComment(commentID, user.ID, content); err != nil {
+			serverError(w, err)
+			return
+		}
+	default:
+		http.NotFound(w, r)
 		return
 	}
 
