@@ -1,0 +1,39 @@
+{{define "title"}}Admin Login | FITNATION{{end}}
+
+{{define "content"}}
+<section class="auth-page" style="margin: 60px auto; padding: 0 24px;">
+  <div class="auth-card">
+
+    <div class="auth-header">
+      <span class="brand-mark" style="width:52px;height:52px;font-size:18px;margin:0 auto 16px;border-radius:var(--radius-md);">FN</span>
+      <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;background:oklch(0.72 0.19 155 / 0.12);border:1px solid oklch(0.72 0.19 155 / 0.3);color:var(--accent);font-size:0.75rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px;">
+        <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;"></span>
+        Accès administrateur
+      </div>
+      <h1>Panneau Admin</h1>
+      <p>Connecte-toi pour accéder au panneau de gestion.</p>
+    </div>
+
+    {{if .Error}}
+    <div class="alert alert-error">{{.Error}}</div>
+    {{end}}
+
+    <form class="form" method="POST" action="/admin/login" autocomplete="off">
+      <label>
+        Identifiant
+        <input type="text" name="username" autocomplete="username" placeholder="admin" required autofocus>
+      </label>
+      <label>
+        Mot de passe
+        <input type="password" name="password" autocomplete="current-password" placeholder="••••••••" required>
+      </label>
+      <button class="button primary full" type="submit">Se connecter</button>
+    </form>
+
+    <p style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border-subtle);text-align:center;font-size:0.78rem;color:var(--text-muted);max-width:none;">
+      Accès réservé aux administrateurs.
+    </p>
+
+  </div>
+</section>
+{{end}}

@@ -79,13 +79,15 @@ func main() {
 	mux.HandleFunc("/posts/new", app.newPost)
 	mux.HandleFunc("/posts/create", app.createPost)
 	mux.HandleFunc("/posts/", app.postsRouter)
+	mux.HandleFunc("/api/posts/search", app.searchPosts)
 	mux.HandleFunc("/api/posts/", app.likePost)
 	mux.HandleFunc("/api/comments/create", app.createComment)
+	mux.HandleFunc("/api/comments/update", app.updateComment)
 	mux.HandleFunc("/api/comments/", app.commentsRouter)
+	mux.HandleFunc("/admin/login", app.adminLogin)
+	mux.HandleFunc("/admin/logout", app.adminLogout)
 	mux.HandleFunc("/admin", app.admin)
 	mux.HandleFunc("/users/", app.userProfile)
-	mux.HandleFunc("/api/comments/update", app.updateComment)
-	mux.HandleFunc("/api/posts/search", app.searchPosts)
 	mux.Handle("/static/avatars/", http.StripPrefix("/static/avatars/", http.FileServer(http.Dir("web/static/avatars"))))
 
 	log.Println("FITNATION lancé sur http://localhost:8000")
@@ -437,7 +439,6 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Gestion upload photo de profil
 	file, header, err := r.FormFile("avatar")
 	if err == nil {
 		defer file.Close()
@@ -618,7 +619,6 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 		return
 	}
 
-	// Récupère l'avatar de l'auteur du post
 	postAuthor, _ := a.store.UserByID(post.UserID)
 	authorAvatar := "/static/images/avatar.svg"
 	if postAuthor != nil && postAuthor.AvatarURL != "" {
@@ -631,7 +631,6 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 		return
 	}
 
-	// Enrichit chaque commentaire avec l'avatar de son auteur
 	type CommentWithAvatar struct {
 		models.Comment
 		AuthorAvatar string
@@ -646,7 +645,6 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 		enrichedComments = append(enrichedComments, CommentWithAvatar{Comment: c, AuthorAvatar: av})
 	}
 
-	// Enrichit le post avec l'avatar
 	type PostWithAvatar struct {
 		*models.Post
 		AuthorAvatar string
@@ -666,7 +664,7 @@ func (a *App) editPost(w http.ResponseWriter, r *http.Request, postID int) {
 	}
 
 	post, err := a.store.PostByID(postID, user.ID)
-	if err != nil || post.UserID != user.ID {
+	if err != nil || post == nil || post.UserID != user.ID {
 		notFound(w)
 		return
 	}
@@ -822,8 +820,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := a.requireUser(w, r)
-	if user == nil {
+	if !a.requireAdmin(w, r) {
 		return
 	}
 
@@ -833,14 +830,14 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := a.store.ListPosts(user.ID, "", 0, "")
+	posts, err := a.store.ListPosts(0, "", 0, "")
 	if err != nil {
 		serverError(w, err)
 		return
 	}
 
 	a.render(w, "admin.html", map[string]any{
-		"CurrentUser": user,
+		"CurrentUser": a.currentUser(r),
 		"Users":       users,
 		"Posts":       posts,
 	})
