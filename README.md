@@ -53,7 +53,7 @@ SMTP_FROM=noreply@fitnation.com
 Démarrez l'application avec la commande suivante :
 
 ```bash
-go run cmd/server/main.go
+go run ./cmd/server/
 ```
 
 Le serveur sera alors accessible à l'adresse : **[http://localhost:8000](http://localhost:8000)**
