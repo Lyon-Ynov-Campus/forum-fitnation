@@ -104,6 +104,7 @@ func (s *Store) Migrate() error {
 	alterQueries := []string{
 		`ALTER TABLE posts ADD COLUMN image_url TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE posts ADD COLUMN tags TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE users ADD COLUMN banned INTEGER NOT NULL DEFAULT 0`,
 	}
 
 	for _, query := range alterQueries {
@@ -127,7 +128,7 @@ func (s *Store) CreateUser(fullName, username, email, passwordHash string) (int,
 
 func (s *Store) UserByEmailOrUsername(identifier string) (*models.User, error) {
 	row := s.DB.QueryRow(
-		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at
+		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at, banned
 		FROM users WHERE email = ? OR username = ?`,
 		identifier, identifier,
 	)
@@ -136,7 +137,7 @@ func (s *Store) UserByEmailOrUsername(identifier string) (*models.User, error) {
 
 func (s *Store) UserByEmail(email string) (*models.User, error) {
 	row := s.DB.QueryRow(
-		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at
+		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at, banned
 		FROM users WHERE email = ?`,
 		email,
 	)
@@ -145,7 +146,7 @@ func (s *Store) UserByEmail(email string) (*models.User, error) {
 
 func (s *Store) UserByID(id int) (*models.User, error) {
 	row := s.DB.QueryRow(
-		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at
+		`SELECT id, full_name, username, email, password_hash, avatar_url, bio, created_at, banned
 		FROM users WHERE id = ?`,
 		id,
 	)
@@ -176,7 +177,7 @@ func (s *Store) DeleteUser(id int) error {
 
 func (s *Store) ListUsers() ([]models.User, error) {
 	rows, err := s.DB.Query(
-		`SELECT u.id, u.full_name, u.username, u.email, u.avatar_url, u.bio, COUNT(p.id) AS posts_count
+		`SELECT u.id, u.full_name, u.username, u.email, u.avatar_url, u.bio, COUNT(p.id) AS posts_count, u.banned
 		FROM users u
 		LEFT JOIN posts p ON p.user_id = u.id
 		GROUP BY u.id
@@ -190,9 +191,11 @@ func (s *Store) ListUsers() ([]models.User, error) {
 	var users []models.User
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.FullName, &user.Username, &user.Email, &user.AvatarURL, &user.Bio, &user.PostsCount); err != nil {
+		var banned int
+		if err := rows.Scan(&user.ID, &user.FullName, &user.Username, &user.Email, &user.AvatarURL, &user.Bio, &user.PostsCount, &banned); err != nil {
 			return nil, err
 		}
+		user.Banned = banned == 1
 		user.Username = displayUsername(user.Username)
 		users = append(users, user)
 	}
@@ -209,10 +212,10 @@ func (s *Store) CreateSession(token string, userID int, expiresAt time.Time) err
 
 func (s *Store) UserBySession(token string) (*models.User, error) {
 	row := s.DB.QueryRow(
-		`SELECT u.id, u.full_name, u.username, u.email, u.password_hash, u.avatar_url, u.bio, u.created_at
+		`SELECT u.id, u.full_name, u.username, u.email, u.password_hash, u.avatar_url, u.bio, u.created_at, u.banned
 		FROM sessions s
 		JOIN users u ON u.id = s.user_id
-		WHERE s.token = ? AND s.expires_at > ?`,
+		WHERE s.token = ? AND s.expires_at > ? AND u.banned = 0`,
 		token, time.Now().UTC().Format(time.RFC3339),
 	)
 	return scanUser(row)
@@ -237,7 +240,7 @@ func (s *Store) CreatePasswordReset(token string, userID int, expiresAt time.Tim
 
 func (s *Store) UserByPasswordReset(token string) (*models.User, error) {
 	row := s.DB.QueryRow(
-		`SELECT u.id, u.full_name, u.username, u.email, u.password_hash, u.avatar_url, u.bio, u.created_at
+		`SELECT u.id, u.full_name, u.username, u.email, u.password_hash, u.avatar_url, u.bio, u.created_at, u.banned
 		FROM password_resets pr
 		JOIN users u ON u.id = pr.user_id
 		WHERE pr.token = ? AND pr.expires_at > ?`,
@@ -251,7 +254,7 @@ func (s *Store) DeletePasswordReset(token string) error {
 	return err
 }
 
-func (s *Store) ListPosts(currentUserID int, sort string, minLikes int, period string) ([]models.Post, error) {
+func (s *Store) ListPosts(currentUserID int, sort string, minLikes int, minComments int, period string, q string) ([]models.Post, error) {
 	orderBy := "p.created_at DESC"
 	switch sort {
 	case "likes":
@@ -270,6 +273,16 @@ func (s *Store) ListPosts(currentUserID int, sort string, minLikes int, period s
 		periodFilter = "AND p.created_at >= datetime('now', '-30 days')"
 	}
 
+	args := []any{currentUserID}
+
+	titleFilter := ""
+	if q != "" {
+		titleFilter = "AND lower(p.title) LIKE ?"
+		args = append(args, "%"+strings.ToLower(q)+"%")
+	}
+
+	args = append(args, minLikes, minComments)
+
 	query := fmt.Sprintf(`
 		SELECT p.id, p.user_id, u.username, p.title, p.content, p.image_url, p.tags, p.created_at,
 			COUNT(DISTINCT pl.user_id) AS likes_count,
@@ -279,12 +292,12 @@ func (s *Store) ListPosts(currentUserID int, sort string, minLikes int, period s
 		JOIN users u ON u.id = p.user_id
 		LEFT JOIN post_likes pl ON pl.post_id = p.id
 		LEFT JOIN comments c ON c.post_id = p.id
-		WHERE 1=1 %s
+		WHERE 1=1 %s %s
 		GROUP BY p.id
-		HAVING likes_count >= ?
-		ORDER BY %s`, periodFilter, orderBy)
+		HAVING likes_count >= ? AND comments_count >= ?
+		ORDER BY %s`, periodFilter, titleFilter, orderBy)
 
-	rows, err := s.DB.Query(query, currentUserID, minLikes)
+	rows, err := s.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -463,13 +476,15 @@ func (s *Store) StatsForUser(userID int) (models.Stats, error) {
 
 func scanUser(row *sql.Row) (*models.User, error) {
 	var user models.User
-	err := row.Scan(&user.ID, &user.FullName, &user.Username, &user.Email, &user.PasswordHash, &user.AvatarURL, &user.Bio, &user.CreatedAt)
+	var banned int
+	err := row.Scan(&user.ID, &user.FullName, &user.Username, &user.Email, &user.PasswordHash, &user.AvatarURL, &user.Bio, &user.CreatedAt, &banned)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
+	user.Banned = banned == 1
 	user.Username = displayUsername(user.Username)
 	return &user, nil
 }
@@ -556,6 +571,52 @@ func (s *Store) SearchPostsByTitle(query string, currentUserID int) ([]models.Po
 		posts = append(posts, post)
 	}
 	return posts, rows.Err()
+}
+
+// AdminDeleteUser supprime un compte sans vérification de propriété
+func (s *Store) AdminDeleteUser(id int) error {
+	_, err := s.DB.Exec(`DELETE FROM users WHERE id = ?`, id)
+	return err
+}
+
+// AdminToggleBan bascule le statut banni d'un utilisateur
+func (s *Store) AdminToggleBan(id int) error {
+	_, err := s.DB.Exec(`UPDATE users SET banned = CASE WHEN banned = 1 THEN 0 ELSE 1 END WHERE id = ?`, id)
+	return err
+}
+
+// AdminDeletePost supprime un post sans vérification de propriété
+func (s *Store) AdminDeletePost(id int) error {
+	_, err := s.DB.Exec(`DELETE FROM posts WHERE id = ?`, id)
+	return err
+}
+
+// UserComments retourne tous les commentaires d'un utilisateur avec le titre du post associé
+func (s *Store) UserComments(userID int) ([]models.Comment, error) {
+	rows, err := s.DB.Query(
+		`SELECT c.id, c.post_id, c.user_id, u.username, c.content, c.created_at, p.title
+		FROM comments c
+		JOIN users u ON u.id = c.user_id
+		JOIN posts p ON p.id = c.post_id
+		WHERE c.user_id = ?
+		ORDER BY c.created_at DESC`,
+		userID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comments []models.Comment
+	for rows.Next() {
+		var comment models.Comment
+		if err := rows.Scan(&comment.ID, &comment.PostID, &comment.UserID, &comment.Author, &comment.Content, &comment.CreatedAt, &comment.PostTitle); err != nil {
+			return nil, err
+		}
+		comment.Author = displayUsername(comment.Author)
+		comments = append(comments, comment)
+	}
+	return comments, rows.Err()
 }
 
 // ListUsersEnriched retourne les utilisateurs avec leurs stats complètes

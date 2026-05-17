@@ -1,70 +1,98 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/YLXuze2Y)
 
+# Forum FitNation
 
-# 🏋️‍♂️ Forum FitNation
+Plateforme communautaire dédiée aux passionnés de fitness. Partagez vos entraînements, posez vos questions, échangez des conseils.
 
-Bienvenue sur **FitNation**, la plateforme communautaire dédiée aux passionnés de fitness, de musculation et de bien-être ! 
+## Fonctionnalités
 
-L'objectif de ce forum est de permettre aux sportifs de tous niveaux de partager leurs entraînements, de poser des questions, d'échanger des conseils et de suivre leur progression avec la communauté.
+### Utilisateurs
+- Inscription avec confirmation de mot de passe (conformité CNIL : 8 caractères min, majuscule, minuscule, chiffre)
+- Connexion par email ou pseudo
+- Réinitialisation de mot de passe par email (lien expirant 1h)
+- Profil personnalisable : pseudo, email, mot de passe, avatar
+- Visualisation de ses posts et commentaires depuis le profil
+- Suppression de compte (cascade sur toutes les données)
+- Navigation en lecture seule sans connexion
 
-## ✨ Fonctionnalités principales
+### Posts
+- Création, modification, suppression de posts (titre, contenu, tags, image)
+- Page dédiée par post avec commentaires
+- Likes sans rechargement de page (API fetch)
+- Modification et suppression des commentaires
 
-- 🔐 **Authentification complète** : Inscription, connexion sécurisée (hachage PBKDF2), et système de réinitialisation de mot de passe par email.
-- 👤 **Profils personnalisés** : Chaque membre possède un profil avec une bio, un avatar personnalisé, et un suivi de ses statistiques (nombre de posts, commentaires et likes reçus).
-- 📝 **Publications & Recherche** : Création de posts avec des tags, recherche par mots-clés, et tri dynamique (par date, popularité).
-- 💬 **Interactions** : Les membres peuvent commenter les posts et ajouter des "likes" de manière fluide.
-- 🌐 **Réseau** : Un annuaire permet de découvrir les autres membres de la communauté et de consulter leurs publications.
-- 🛡️ **Gestion des erreurs** : Pages personnalisées (404, 400, 500) pour garantir une expérience utilisateur agréable même quand les choses se passent mal.
+### Recherche & Filtres
+- Recherche de posts par titre (server-side)
+- Tri par date, popularité (likes) ou activité (commentaires)
+- Filtres : période (aujourd'hui / semaine / mois), likes minimum, commentaires minimum
 
-## 🛠️ Stack Technique
+### Réseau
+- Annuaire des membres avec stats (posts, commentaires, likes reçus)
+- Barre de recherche de membres
 
-- **Backend** : Go (Golang) avec `net/http` et `html/template`
-- **Base de données** : SQLite (fichier `.db` local)
-- **Frontend** : HTML5, CSS3, Vanilla JS
-- **Architecture** : Modèle MVC simplifié (Routes, Modèles, Vues)
+### Admin
+- Accès restreint via `/admin/login` (identifiants configurables par variables d'environnement)
+- Bannissement / débannissement de comptes (session invalidée immédiatement)
+- Suppression de comptes et de posts
+- Lien Admin visible uniquement pour les comptes `@ynov.com`
 
-## 🚀 Installation & Lancement
+## Stack technique
 
-### Prérequis
-- [Go](https://golang.org/dl/) (version 1.20 ou supérieure recommandée)
+| Couche | Technologie |
+|--------|------------|
+| Backend | Go 1.24 — `net/http`, `html/template` |
+| Base de données | SQLite (`modernc.org/sqlite`) |
+| Frontend | HTML5, CSS3, Vanilla JS |
 
-### 1. Cloner le projet
+## Installation
+
+**Prérequis** : Go 1.20+
+
 ```bash
 git clone https://github.com/Lyon-Ynov-Campus/forum-fitnation.git
 cd forum-fitnation
 ```
 
-### 2. Configuration de l'environnement
-Créez un fichier `.env` à la racine du projet en vous basant sur ce modèle :
+Créer un fichier `.env` à la racine :
 
 ```env
-# Base de données
 FITNATION_DB=fitnation.db
 
-# Configuration SMTP (pour l'envoi d'emails de réinitialisation de mot de passe)
+# SMTP (optionnel — sans config, le lien reset s'affiche dans les logs)
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=votre_email@example.com
 SMTP_PASSWORD=votre_mot_de_passe
 SMTP_FROM=noreply@fitnation.com
+
+# Admin (défaut si non renseigné : admin / admin1234)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=motdepasse_securise
 ```
 
-### 3. Lancer le serveur
-Démarrez l'application avec la commande suivante :
+Lancer le serveur :
 
 ```bash
 go run ./cmd/server/
 ```
 
-Le serveur sera alors accessible à l'adresse : **[http://localhost:8000](http://localhost:8000)**
+Accès : [http://localhost:8000](http://localhost:8000)
 
-## 📂 Structure du projet
+## Structure du projet
 
-- `/cmd/server/` : Point d'entrée de l'application (routes, configuration serveur).
-- `/internal/` : Cœur de l'application (modèles de données, interactions avec la base de données).
-- `/web/static/` : Fichiers statiques (CSS, images, et uploads d'avatars).
-- `/web/templates/` : Fichiers HTML (Vues).
+```
+forum-fitnation/
+├── cmd/server/
+│   ├── main.go        # Routes, handlers principaux
+│   └── admin.go       # Handlers admin (login, ban, suppression)
+├── internal/
+│   ├── database/      # Couche SQLite
+│   └── models/        # Structs de données
+└── web/
+    ├── static/        # CSS, JS, avatars
+    └── templates/     # Vues HTML
+```
 
-## 👨‍💻 Contribution
-Ce projet est réalisé dans le cadre du cursus de Lyon Ynov Campus. 
-N'hésitez pas à ouvrir des *Issues* ou des *Pull Requests* si vous souhaitez proposer des améliorations !
+## Projet
+
+Réalisé dans le cadre du cursus Lyon Ynov Campus.

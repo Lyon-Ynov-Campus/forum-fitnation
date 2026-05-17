@@ -92,6 +92,35 @@
       {{end}}
     </div>
 
+    <div class="section-title" style="margin-top: 32px;">
+      <h2>Mes commentaires</h2>
+    </div>
+
+    <div class="post-list compact">
+      {{range .Comments}}
+      <article class="card" style="padding: 16px 20px;">
+        <div class="post-meta" style="margin-bottom: 8px;">
+          <div>
+            <a href="/posts/{{.PostID}}" style="font-weight: 600; text-decoration: none;">{{.PostTitle}}</a>
+            <span style="color: var(--color-muted); font-size: 0.85em; margin-left: 8px;">{{.CreatedAt}}</span>
+          </div>
+        </div>
+        <p style="margin: 0 0 10px 0;">{{.Content}}</p>
+        <div style="display: flex; gap: 8px;">
+          <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
+            <input type="hidden" name="post_id" value="{{.PostID}}">
+            <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?">Supprimer</button>
+          </form>
+        </div>
+      </article>
+      {{else}}
+      <div class="empty-state">
+        <h2>Aucun commentaire</h2>
+        <p>Tes commentaires appara&#238;tront ici.</p>
+      </div>
+      {{end}}
+    </div>
+
     <form method="POST" action="/profile/delete" class="danger-zone">
       <button class="button danger full" type="submit" data-confirm="Supprimer d&#233;finitivement votre compte ?">Supprimer le compte</button>
     </form>

@@ -30,7 +30,7 @@
 <a href="/posts/new">Publier</a>
 <a href="/network">R&#233;seau</a>
 <a href="/profile">Profil</a>
-<a href="/admin">Admin</a>
+{{if .IsAdmin}}<a href="/admin">Admin</a>{{end}}
 <form class="logout-form" method="POST" action="/logout">
   <button type="submit">D&#233;connexion</button>
 </form>

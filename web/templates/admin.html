@@ -2,31 +2,43 @@
 {{define "content"}}
 <section class="page-shell">
   <h1>Panel Admin</h1>
-  <h2>Utilisateurs</h2>
+
+  <h2 style="margin: 24px 0 12px;">Utilisateurs</h2>
   <table class="admin-table">
     <thead>
       <tr>
         <th>Utilisateur</th>
         <th>Email</th>
-        <th>Action</th>
+        <th>Statut</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       {{range .Users}}
-      <tr>
+      <tr{{if .Banned}} style="opacity: 0.5;"{{end}}>
         <td>{{.Username}}</td>
         <td>{{.Email}}</td>
-        <td><button class="button danger">Bannir</button></td>
+        <td>{{if .Banned}}<span style="color: #ff4444; font-weight: 600;">Banni</span>{{else}}<span style="color: #00ff88;">Actif</span>{{end}}</td>
+        <td style="display: flex; gap: 8px;">
+          <form method="POST" action="/admin/users/{{.ID}}/ban" style="display:inline;">
+            <button class="button soft" type="submit" data-confirm="{{if .Banned}}D&#233;bannir cet utilisateur ?{{else}}Bannir cet utilisateur ?{{end}}">
+              {{if .Banned}}D&#233;bannir{{else}}Bannir{{end}}
+            </button>
+          </form>
+          <form method="POST" action="/admin/users/{{.ID}}/delete" style="display:inline;">
+            <button class="button danger" type="submit" data-confirm="Supprimer d&#233;finitivement ce compte ?">Supprimer</button>
+          </form>
+        </td>
       </tr>
       {{else}}
       <tr>
-        <td colspan="3">Aucun utilisateur</td>
+        <td colspan="4">Aucun utilisateur</td>
       </tr>
       {{end}}
     </tbody>
   </table>
 
-  <h2>Posts</h2>
+  <h2 style="margin: 32px 0 12px;">Posts</h2>
   <table class="admin-table">
     <thead>
       <tr>
@@ -38,9 +50,13 @@
     <tbody>
       {{range .Posts}}
       <tr>
-        <td>{{.Title}}</td>
+        <td><a href="/posts/{{.ID}}">{{.Title}}</a></td>
         <td>{{.Author}}</td>
-        <td><button class="button danger">Supprimer</button></td>
+        <td>
+          <form method="POST" action="/admin/posts/{{.ID}}/delete" style="display:inline;">
+            <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
+          </form>
+        </td>
       </tr>
       {{else}}
       <tr>

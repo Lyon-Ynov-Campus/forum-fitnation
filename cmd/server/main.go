@@ -12,10 +12,12 @@ import (
 	"log"
 	"net/http"
 	"net/smtp"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"fitnation/internal/database"
 	"fitnation/internal/models"
@@ -87,6 +89,8 @@ func main() {
 	mux.HandleFunc("/admin/login", app.adminLogin)
 	mux.HandleFunc("/admin/logout", app.adminLogout)
 	mux.HandleFunc("/admin", app.admin)
+	mux.HandleFunc("/admin/users/", app.adminUsersRouter)
+	mux.HandleFunc("/admin/posts/", app.adminPostsRouter)
 	mux.HandleFunc("/users/", app.userProfile)
 	mux.Handle("/static/avatars/", http.StripPrefix("/static/avatars/", http.FileServer(http.Dir("web/static/avatars"))))
 
@@ -110,17 +114,21 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		userID = user.ID
 	}
 
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	sort := r.URL.Query().Get("sort")
 	period := r.URL.Query().Get("date")
 	minLikesStr := r.URL.Query().Get("likes")
+	minCommentsStr := r.URL.Query().Get("comments")
 	minLikes := 0
-	if minLikesStr != "" {
-		if v, err := strconv.Atoi(minLikesStr); err == nil && v >= 0 {
-			minLikes = v
-		}
+	if v, err := strconv.Atoi(minLikesStr); err == nil && v >= 0 {
+		minLikes = v
+	}
+	minComments := 0
+	if v, err := strconv.Atoi(minCommentsStr); err == nil && v >= 0 {
+		minComments = v
 	}
 
-	posts, err := a.store.ListPosts(userID, sort, minLikes, period)
+	posts, err := a.store.ListPosts(userID, sort, minLikes, minComments, period, q)
 	if err != nil {
 		serverError(w, err)
 		return
@@ -132,11 +140,34 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fv := url.Values{}
+	if q != "" {
+		fv.Set("q", q)
+	}
+	if period != "" {
+		fv.Set("date", period)
+	}
+	if minLikesStr != "" {
+		fv.Set("likes", minLikesStr)
+	}
+	if minCommentsStr != "" {
+		fv.Set("comments", minCommentsStr)
+	}
+	filterSuffix := template.URL("")
+	if len(fv) > 0 {
+		filterSuffix = template.URL("&" + fv.Encode())
+	}
+
 	a.render(w, "home.html", map[string]any{
-		"CurrentUser": user,
-		"Posts":       posts,
-		"Users":       users,
-		"Sort":        sort,
+		"CurrentUser":  user,
+		"Posts":        posts,
+		"Users":        users,
+		"Sort":         sort,
+		"Q":            q,
+		"Period":       period,
+		"MinLikes":     minLikesStr,
+		"MinComments":  minCommentsStr,
+		"FilterSuffix": filterSuffix,
 	})
 }
 
@@ -224,6 +255,11 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 
 		if fullName == "" || email == "" || username == "" || password == "" || password != confirm {
 			renderError(w, http.StatusBadRequest, "Formulaire invalide")
+			return
+		}
+
+		if err := validatePassword(password); err != nil {
+			renderError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
@@ -393,11 +429,18 @@ func (a *App) profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	comments, err := a.store.UserComments(user.ID)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+
 	a.render(w, "profile.html", map[string]any{
 		"CurrentUser": user,
 		"User":        user,
 		"Stats":       stats,
 		"Posts":       posts,
+		"Comments":    comments,
 	})
 }
 
@@ -426,6 +469,10 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 
 	passwordHash := ""
 	if password != "" {
+		if err := validatePassword(password); err != nil {
+			renderError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		hash, err := hashPassword(password)
 		if err != nil {
 			serverError(w, err)
@@ -830,7 +877,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := a.store.ListPosts(0, "", 0, "")
+	posts, err := a.store.ListPosts(0, "", 0, 0, "", "")
 	if err != nil {
 		serverError(w, err)
 		return
@@ -841,6 +888,75 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		"Users":       users,
 		"Posts":       posts,
 	})
+}
+
+func (a *App) adminUsersRouter(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	if !a.requireAdmin(w, r) {
+		return
+	}
+
+	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/admin/users/"))
+	if len(parts) != 2 {
+		notFound(w)
+		return
+	}
+
+	targetID, err := strconv.Atoi(parts[0])
+	if err != nil {
+		notFound(w)
+		return
+	}
+
+	switch parts[1] {
+	case "delete":
+		if err := a.store.AdminDeleteUser(targetID); err != nil {
+			serverError(w, err)
+			return
+		}
+	case "ban":
+		if err := a.store.AdminToggleBan(targetID); err != nil {
+			serverError(w, err)
+			return
+		}
+	default:
+		notFound(w)
+		return
+	}
+
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
+func (a *App) adminPostsRouter(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	if !a.requireAdmin(w, r) {
+		return
+	}
+
+	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/admin/posts/"))
+	if len(parts) != 2 || parts[1] != "delete" {
+		notFound(w)
+		return
+	}
+
+	postID, err := strconv.Atoi(parts[0])
+	if err != nil {
+		notFound(w)
+		return
+	}
+
+	if err := a.store.AdminDeletePost(postID); err != nil {
+		serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
 }
 
 func (a *App) userProfile(w http.ResponseWriter, r *http.Request) {
@@ -984,7 +1100,7 @@ func (a *App) searchPosts(w http.ResponseWriter, r *http.Request) {
 	if query != "" {
 		posts, err = a.store.SearchPostsByTitle(query, userID)
 	} else {
-		posts, err = a.store.ListPosts(userID, "", 0, "")
+		posts, err = a.store.ListPosts(userID, "", 0, 0, "", "")
 	}
 	if err != nil {
 		serverError(w, err)
@@ -1018,9 +1134,38 @@ func (a *App) render(w http.ResponseWriter, page string, data any) {
 		data = map[string]any{}
 	}
 
+	if m, ok := data.(map[string]any); ok {
+		if u, ok := m["CurrentUser"].(*models.User); ok && u != nil {
+			m["IsAdmin"] = strings.Contains(u.Email, "@ynov.com")
+		} else {
+			m["IsAdmin"] = false
+		}
+	}
+
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		serverError(w, err)
 	}
+}
+
+func validatePassword(p string) error {
+	if len(p) < 8 {
+		return fmt.Errorf("Le mot de passe doit contenir au moins 8 caractères")
+	}
+	var hasUpper, hasLower, hasDigit bool
+	for _, c := range p {
+		switch {
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsDigit(c):
+			hasDigit = true
+		}
+	}
+	if !hasUpper || !hasLower || !hasDigit {
+		return fmt.Errorf("Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre")
+	}
+	return nil
 }
 
 func hashPassword(password string) (string, error) {

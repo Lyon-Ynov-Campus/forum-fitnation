@@ -10,6 +10,7 @@ type User struct {
 	Bio          string
 	PostsCount   int
 	CreatedAt    string
+	Banned       bool
 }
 
 // UserEnriched est utilisé pour la page Réseau avec stats complètes
@@ -47,6 +48,7 @@ type Comment struct {
 	Author    string
 	Content   string
 	CreatedAt string
+	PostTitle string
 }
 
 type Stats struct {
