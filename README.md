@@ -4,6 +4,10 @@
 
 Plateforme communautaire dédiée aux passionnés de fitness. Partagez vos entraînements, posez vos questions, échangez des conseils.
 
+**Démo live : [https://forum-fitnation.onrender.com](https://forum-fitnation.onrender.com)**
+
+> Instance gratuite Render — premier chargement peut prendre ~30 secondes (spin-down après inactivité).
+
 ## Fonctionnalités
 
 ### Utilisateurs
@@ -43,8 +47,18 @@ Plateforme communautaire dédiée aux passionnés de fitness. Partagez vos entra
 | Backend | Go 1.24 — `net/http`, `html/template` |
 | Base de données | SQLite (`modernc.org/sqlite`) |
 | Frontend | HTML5, CSS3, Vanilla JS |
+| Déploiement | Render (Docker runtime) |
 
-## Installation
+## Sécurité
+
+- **CSRF** : protection HMAC sur toutes les mutations (formulaires + API fetch via `X-CSRF-Token`)
+- **Mots de passe** : PBKDF2-SHA256, 120 000 itérations, sel aléatoire 16 octets
+- **Sessions** : cookies `HttpOnly`, `SameSite=Lax`, `Secure` automatique en HTTPS
+- **Avatars** : validation par magic bytes (JPEG/PNG/GIF/WebP), limite 2 Mo
+- **En-têtes** : `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, HSTS en HTTPS
+- **Admin** : tokens en mémoire protégés par `sync.RWMutex`, `ADMIN_USERNAME`/`ADMIN_PASSWORD` via variables d'environnement
+
+## Installation locale
 
 **Prérequis** : Go 1.20+
 
@@ -57,6 +71,8 @@ Créer un fichier `.env` à la racine :
 
 ```env
 FITNATION_DB=fitnation.db
+PORT=8000
+CSRF_SECRET=une_chaine_aleatoire_longue
 
 # SMTP (optionnel — sans config, le lien reset s'affiche dans les logs)
 SMTP_HOST=smtp.example.com
@@ -78,19 +94,30 @@ go run ./cmd/server/
 
 Accès : [http://localhost:8000](http://localhost:8000)
 
+## Déploiement (Render)
+
+Le projet inclut un `Dockerfile` et un `render.yaml`. Pour déployer :
+
+1. Créer un **Web Service** sur [render.com](https://render.com) depuis ce repo
+2. **Build Command** : `go build -tags netgo -ldflags '-s -w' -o app ./cmd/server`
+3. **Start Command** : `./app`
+4. Définir les variables d'environnement (`CSRF_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, SMTP…)
+
 ## Structure du projet
 
 ```
 forum-fitnation/
 ├── cmd/server/
-│   ├── main.go        # Routes, handlers principaux
+│   ├── main.go        # Routes, handlers principaux, sécurité
 │   └── admin.go       # Handlers admin (login, ban, suppression)
 ├── internal/
 │   ├── database/      # Couche SQLite
 │   └── models/        # Structs de données
-└── web/
-    ├── static/        # CSS, JS, avatars
-    └── templates/     # Vues HTML
+├── web/
+│   ├── static/        # CSS, JS, images
+│   └── templates/     # Vues HTML
+├── Dockerfile
+└── render.yaml
 ```
 
 ## Projet
