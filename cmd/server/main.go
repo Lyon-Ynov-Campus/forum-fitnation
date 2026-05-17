@@ -23,10 +23,13 @@ import (
 	"fitnation/internal/models"
 )
 
+const csrfCookieName = "fitnation_csrf"
+
 const sessionCookieName = "fitnation_session"
 
 type App struct {
-	store *database.Store
+	store   *database.Store
+	csrfKey []byte
 }
 
 func loadEnv(path string) {
@@ -61,7 +64,19 @@ func main() {
 	}
 	defer store.Close()
 
-	app := &App{store: store}
+	csrfKeyHex := os.Getenv("CSRF_SECRET")
+	var csrfKey []byte
+	if csrfKeyHex != "" {
+		csrfKey = []byte(csrfKeyHex)
+	} else {
+		csrfKey, err = randomBytes(32)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("WARN: CSRF_SECRET non défini — clé éphémère générée, sessions invalides au redémarrage")
+	}
+
+	app := &App{store: store, csrfKey: csrfKey}
 	mux := http.NewServeMux()
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
@@ -94,8 +109,12 @@ func main() {
 	mux.HandleFunc("/users/", app.userProfile)
 	mux.Handle("/static/avatars/", http.StripPrefix("/static/avatars/", http.FileServer(http.Dir("web/static/avatars"))))
 
-	log.Println("FITNATION lancé sur http://localhost:8000")
-	log.Fatal(http.ListenAndServe(":8000", mux))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+	log.Printf("FITNATION lancé sur http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, secureHeaders(mux)))
 }
 
 func (a *App) home(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +177,7 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		filterSuffix = template.URL("&" + fv.Encode())
 	}
 
-	a.render(w, "home.html", map[string]any{
+	a.render(w, r, "home.html", map[string]any{
 		"CurrentUser":  user,
 		"Posts":        posts,
 		"Users":        users,
@@ -178,10 +197,14 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-		a.render(w, "login.html", nil)
+		a.render(w, r, "login.html", nil)
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
 			badRequest(w)
+			return
+		}
+		if !a.checkCSRF(r) {
+			renderError(w, http.StatusForbidden, "Token CSRF invalide")
 			return
 		}
 
@@ -200,7 +223,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := a.startSession(w, user.ID); err != nil {
+		if err := a.startSession(w, r, user.ID); err != nil {
 			serverError(w, err)
 			return
 		}
@@ -228,6 +251,7 @@ func (a *App) logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		Secure:   isHTTPS(r),
 	})
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -240,10 +264,14 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-		a.render(w, "register.html", nil)
+		a.render(w, r, "register.html", nil)
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
 			badRequest(w)
+			return
+		}
+		if !a.checkCSRF(r) {
+			renderError(w, http.StatusForbidden, "Token CSRF invalide")
 			return
 		}
 
@@ -275,7 +303,7 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := a.startSession(w, userID); err != nil {
+		if err := a.startSession(w, r, userID); err != nil {
 			serverError(w, err)
 			return
 		}
@@ -288,10 +316,14 @@ func (a *App) register(w http.ResponseWriter, r *http.Request) {
 func (a *App) forgotPassword(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		a.render(w, "forgot_password.html", nil)
+		a.render(w, r, "forgot_password.html", nil)
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
 			badRequest(w)
+			return
+		}
+		if !a.checkCSRF(r) {
+			renderError(w, http.StatusForbidden, "Token CSRF invalide")
 			return
 		}
 
@@ -335,7 +367,7 @@ func (a *App) forgotPassword(w http.ResponseWriter, r *http.Request) {
 			data["DevLink"] = resetURL
 		}
 
-		a.render(w, "forgot_password.html", data)
+		a.render(w, r, "forgot_password.html", data)
 	default:
 		methodNotAllowed(w)
 	}
@@ -360,10 +392,14 @@ func (a *App) resetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		a.render(w, "reset_password.html", map[string]any{"Token": token})
+		a.render(w, r, "reset_password.html", map[string]any{"Token": token})
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
 			badRequest(w)
+			return
+		}
+		if !a.checkCSRF(r) {
+			renderError(w, http.StatusForbidden, "Token CSRF invalide")
 			return
 		}
 
@@ -435,7 +471,7 @@ func (a *App) profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.render(w, "profile.html", map[string]any{
+	a.render(w, r, "profile.html", map[string]any{
 		"CurrentUser": user,
 		"User":        user,
 		"Stats":       stats,
@@ -456,6 +492,10 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := r.ParseMultipartForm(8 << 20); err != nil {
 		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -490,12 +530,29 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		defer file.Close()
 
+		const maxAvatarSize = 2 << 20 // 2 MB
+		if header.Size > maxAvatarSize {
+			renderError(w, http.StatusBadRequest, "Image trop grande (max 2 Mo)")
+			return
+		}
+
+		data := make([]byte, header.Size)
+		if _, err := file.Read(data); err != nil {
+			serverError(w, err)
+			return
+		}
+
+		if !validImageMagic(data) {
+			renderError(w, http.StatusBadRequest, "Format d'image non supporté (JPEG, PNG, GIF, WebP uniquement)")
+			return
+		}
+
 		ext := ".jpg"
-		if strings.Contains(header.Header.Get("Content-Type"), "png") {
+		if len(data) >= 4 && data[0] == 0x89 && data[1] == 0x50 {
 			ext = ".png"
-		} else if strings.Contains(header.Header.Get("Content-Type"), "gif") {
+		} else if len(data) >= 4 && data[0] == 0x47 && data[1] == 0x49 {
 			ext = ".gif"
-		} else if strings.Contains(header.Header.Get("Content-Type"), "webp") {
+		} else if len(data) >= 12 && data[8] == 0x57 && data[9] == 0x45 {
 			ext = ".webp"
 		}
 
@@ -508,11 +565,6 @@ func (a *App) profileUpdate(w http.ResponseWriter, r *http.Request) {
 		filename := fmt.Sprintf("avatar_%d%s", user.ID, ext)
 		destPath := avatarDir + "/" + filename
 
-		data := make([]byte, header.Size)
-		if _, err := file.Read(data); err != nil {
-			serverError(w, err)
-			return
-		}
 		if err := os.WriteFile(destPath, data, 0644); err != nil {
 			serverError(w, err)
 			return
@@ -533,6 +585,14 @@ func (a *App) profileDelete(w http.ResponseWriter, r *http.Request) {
 		methodNotAllowed(w)
 		return
 	}
+	if err := r.ParseForm(); err != nil {
+		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
+		return
+	}
 
 	user := a.requireUser(w, r)
 	if user == nil {
@@ -551,6 +611,7 @@ func (a *App) profileDelete(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		Secure:   isHTTPS(r),
 	})
 	http.Redirect(w, r, "/register", http.StatusSeeOther)
 }
@@ -567,7 +628,7 @@ func (a *App) network(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.render(w, "network.html", map[string]any{
+	a.render(w, r, "network.html", map[string]any{
 		"CurrentUser": a.currentUser(r),
 		"Users":       users,
 	})
@@ -584,7 +645,7 @@ func (a *App) newPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.render(w, "new_post.html", map[string]any{"CurrentUser": user})
+	a.render(w, r, "new_post.html", map[string]any{"CurrentUser": user})
 }
 
 func (a *App) createPost(w http.ResponseWriter, r *http.Request) {
@@ -599,6 +660,10 @@ func (a *App) createPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := r.ParseForm(); err != nil {
 		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -697,7 +762,7 @@ func (a *App) showPost(w http.ResponseWriter, r *http.Request, postID int) {
 		AuthorAvatar string
 	}
 
-	a.render(w, "post_detail.html", map[string]any{
+	a.render(w, r, "post_detail.html", map[string]any{
 		"CurrentUser": user,
 		"Post":        PostWithAvatar{Post: post, AuthorAvatar: authorAvatar},
 		"Comments":    enrichedComments,
@@ -716,7 +781,7 @@ func (a *App) editPost(w http.ResponseWriter, r *http.Request, postID int) {
 		return
 	}
 
-	a.render(w, "edit_post.html", map[string]any{
+	a.render(w, r, "edit_post.html", map[string]any{
 		"CurrentUser": user,
 		"Post":        post,
 	})
@@ -729,6 +794,10 @@ func (a *App) updatePost(w http.ResponseWriter, r *http.Request, postID int) {
 	}
 	if err := r.ParseForm(); err != nil {
 		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -754,6 +823,14 @@ func (a *App) deletePost(w http.ResponseWriter, r *http.Request, postID int) {
 	if user == nil {
 		return
 	}
+	if err := r.ParseForm(); err != nil {
+		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
+		return
+	}
 
 	if err := a.store.DeletePost(postID, user.ID); err != nil {
 		serverError(w, err)
@@ -772,6 +849,11 @@ func (a *App) likePost(w http.ResponseWriter, r *http.Request) {
 	user := a.currentUser(r)
 	if user == nil {
 		http.Error(w, "Connexion requise", http.StatusUnauthorized)
+		return
+	}
+
+	if !a.checkCSRF(r) {
+		http.Error(w, "Token CSRF invalide", http.StatusForbidden)
 		return
 	}
 
@@ -814,6 +896,10 @@ func (a *App) createComment(w http.ResponseWriter, r *http.Request) {
 		badRequest(w)
 		return
 	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
+		return
+	}
 
 	postID, err := strconv.Atoi(r.FormValue("post_id"))
 	if err != nil {
@@ -839,6 +925,14 @@ func (a *App) commentsRouter(w http.ResponseWriter, r *http.Request) {
 	parts := splitPath(strings.TrimPrefix(r.URL.Path, "/api/comments/"))
 	if len(parts) != 2 || parts[1] != "delete" || r.Method != http.MethodPost {
 		notFound(w)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -883,7 +977,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.render(w, "admin.html", map[string]any{
+	a.render(w, r, "admin.html", map[string]any{
 		"CurrentUser": a.currentUser(r),
 		"Users":       users,
 		"Posts":       posts,
@@ -896,6 +990,14 @@ func (a *App) adminUsersRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !a.requireAdmin(w, r) {
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -936,6 +1038,14 @@ func (a *App) adminPostsRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !a.requireAdmin(w, r) {
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -990,7 +1100,7 @@ func (a *App) userProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.render(w, "user_profile.html", map[string]any{
+	a.render(w, r, "user_profile.html", map[string]any{
 		"CurrentUser": a.currentUser(r),
 		"Member":      member,
 		"Posts":       posts,
@@ -1020,7 +1130,7 @@ func (a *App) requireUser(w http.ResponseWriter, r *http.Request) *models.User {
 	return user
 }
 
-func (a *App) startSession(w http.ResponseWriter, userID int) error {
+func (a *App) startSession(w http.ResponseWriter, r *http.Request, userID int) error {
 	token, err := randomToken(32)
 	if err != nil {
 		return err
@@ -1038,6 +1148,7 @@ func (a *App) startSession(w http.ResponseWriter, userID int) error {
 		Expires:  expiresAt,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		Secure:   isHTTPS(r),
 	})
 	return nil
 }
@@ -1054,6 +1165,10 @@ func (a *App) updateComment(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := r.ParseForm(); err != nil {
 		badRequest(w)
+		return
+	}
+	if !a.checkCSRF(r) {
+		renderError(w, http.StatusForbidden, "Token CSRF invalide")
 		return
 	}
 
@@ -1123,7 +1238,7 @@ func (a *App) searchPosts(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func (a *App) render(w http.ResponseWriter, page string, data any) {
+func (a *App) render(w http.ResponseWriter, r *http.Request, page string, data any) {
 	tmpl, err := template.ParseFiles("web/templates/layout.html", "web/templates/"+page)
 	if err != nil {
 		serverError(w, err)
@@ -1140,12 +1255,109 @@ func (a *App) render(w http.ResponseWriter, page string, data any) {
 		} else {
 			m["IsAdmin"] = false
 		}
+		m["CSRFToken"] = a.ensureCSRFCookie(w, r)
 	}
 
 	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
 		serverError(w, err)
 	}
 }
+
+// ─── Security helpers ─────────────────────────────────────────────────────────
+
+func isHTTPS(r *http.Request) bool {
+	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+}
+
+func secureHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+		if isHTTPS(r) {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// csrfToken returns the expected token for this request.
+// Authenticated: HMAC(csrfKey, session_cookie). Unauthenticated: nonce cookie value.
+func (a *App) csrfToken(r *http.Request) string {
+	if sess, err := r.Cookie(sessionCookieName); err == nil && sess.Value != "" {
+		mac := hmac.New(sha256.New, a.csrfKey)
+		mac.Write([]byte(sess.Value))
+		return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	}
+	if nonce, err := r.Cookie(csrfCookieName); err == nil && nonce.Value != "" {
+		return nonce.Value
+	}
+	return ""
+}
+
+// ensureCSRFCookie sets the csrf nonce cookie for unauthenticated users if missing.
+func (a *App) ensureCSRFCookie(w http.ResponseWriter, r *http.Request) string {
+	if sess, err := r.Cookie(sessionCookieName); err == nil && sess.Value != "" {
+		return a.csrfToken(r)
+	}
+	if nonce, err := r.Cookie(csrfCookieName); err == nil && nonce.Value != "" {
+		return nonce.Value
+	}
+	token, _ := randomToken(24)
+	http.SetCookie(w, &http.Cookie{
+		Name:     csrfCookieName,
+		Value:    token,
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   isHTTPS(r),
+	})
+	return token
+}
+
+func (a *App) checkCSRF(r *http.Request) bool {
+	submitted := r.FormValue("csrf_token")
+	if submitted == "" {
+		submitted = r.Header.Get("X-CSRF-Token")
+	}
+	if submitted == "" {
+		return false
+	}
+	expected := a.csrfToken(r)
+	if expected == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(submitted), []byte(expected)) == 1
+}
+
+// validImageMagic checks the first bytes against known image magic numbers.
+func validImageMagic(data []byte) bool {
+	if len(data) < 12 {
+		return false
+	}
+	// JPEG: FF D8 FF
+	if data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+		return true
+	}
+	// PNG: 89 50 4E 47 0D 0A 1A 0A
+	if data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 {
+		return true
+	}
+	// GIF: 47 49 46 38
+	if data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38 {
+		return true
+	}
+	// WebP: RIFF????WEBP
+	if data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
+		data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50 {
+		return true
+	}
+	return false
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 func validatePassword(p string) error {
 	if len(p) < 8 {

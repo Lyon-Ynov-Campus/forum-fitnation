@@ -10,6 +10,7 @@
     </div>
 
     <form class="form two-columns" method="POST" action="/register">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
       <label>
         Nom complet
         <input type="text" name="full_name" autocomplete="name" required placeholder="Jean Dupont">

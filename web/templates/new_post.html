@@ -9,6 +9,7 @@
     </div>
 
     <form id="new-post-form" class="form" method="POST" action="/posts/create">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
       <label>
         Titre
         <input type="text" name="title" maxlength="120" required placeholder="Titre de ton post">

@@ -1,2 +1,6 @@
 fitnation.db
 .env
+bin/
+/server
+.claude/
+web/static/avatars/

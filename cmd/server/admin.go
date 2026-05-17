@@ -3,12 +3,16 @@ package main
 import (
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
 const adminSessionCookie = "fitnation_admin"
 
-var adminTokens = map[string]time.Time{}
+var (
+	adminTokensMu sync.RWMutex
+	adminTokens   = map[string]time.Time{}
+)
 
 func (a *App) adminLogin(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -17,11 +21,15 @@ func (a *App) adminLogin(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/admin", http.StatusSeeOther)
 			return
 		}
-		a.render(w, "admin_login.html", nil)
+		a.render(w, r, "admin_login.html", nil)
 
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
 			badRequest(w)
+			return
+		}
+		if !a.checkCSRF(r) {
+			renderError(w, http.StatusForbidden, "Token CSRF invalide")
 			return
 		}
 
@@ -38,7 +46,7 @@ func (a *App) adminLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if username != adminUser || password != adminPass {
-			a.render(w, "admin_login.html", map[string]any{
+			a.render(w, r, "admin_login.html", map[string]any{
 				"Error": "Identifiants incorrects.",
 			})
 			return
@@ -50,15 +58,19 @@ func (a *App) adminLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		adminTokens[token] = time.Now().Add(2 * time.Hour)
+		expiry := time.Now().Add(2 * time.Hour)
+		adminTokensMu.Lock()
+		adminTokens[token] = expiry
+		adminTokensMu.Unlock()
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     adminSessionCookie,
 			Value:    token,
 			Path:     "/",
-			Expires:  time.Now().Add(2 * time.Hour),
+			Expires:  expiry,
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
+			Secure:   isHTTPS(r),
 		})
 
 		http.Redirect(w, r, "/admin", http.StatusSeeOther)
@@ -75,7 +87,9 @@ func (a *App) adminLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	cookie, err := r.Cookie(adminSessionCookie)
 	if err == nil {
+		adminTokensMu.Lock()
 		delete(adminTokens, cookie.Value)
+		adminTokensMu.Unlock()
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     adminSessionCookie,
@@ -84,6 +98,7 @@ func (a *App) adminLogout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
+		Secure:   isHTTPS(r),
 	})
 	http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 }
@@ -93,9 +108,13 @@ func (a *App) currentAdmin(r *http.Request) bool {
 	if err != nil || cookie.Value == "" {
 		return false
 	}
+	adminTokensMu.RLock()
 	expiry, ok := adminTokens[cookie.Value]
+	adminTokensMu.RUnlock()
 	if !ok || time.Now().After(expiry) {
+		adminTokensMu.Lock()
 		delete(adminTokens, cookie.Value)
+		adminTokensMu.Unlock()
 		return false
 	}
 	return true

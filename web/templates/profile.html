@@ -31,6 +31,7 @@
     <div class="card" style="margin-bottom: 24px;">
       <h2 style="margin-bottom: 20px;">Modifier le profil</h2>
       <form class="form two-columns" method="POST" action="/profile/update" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <label>
           Pseudo
           <input type="text" name="username" value="{{.User.Username}}" required>
@@ -79,6 +80,7 @@
           <div class="post-actions">
             <a class="button soft" href="/posts/{{.ID}}/edit">Modifier</a>
             <form method="POST" action="/posts/{{.ID}}/delete" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
               <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
             </form>
           </div>
@@ -108,6 +110,7 @@
         <p style="margin: 0 0 10px 0;">{{.Content}}</p>
         <div style="display: flex; gap: 8px;">
           <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
             <input type="hidden" name="post_id" value="{{.PostID}}">
             <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?">Supprimer</button>
           </form>
@@ -122,6 +125,7 @@
     </div>
 
     <form method="POST" action="/profile/delete" class="danger-zone">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
       <button class="button danger full" type="submit" data-confirm="Supprimer d&#233;finitivement votre compte ?">Supprimer le compte</button>
     </form>
   </section>

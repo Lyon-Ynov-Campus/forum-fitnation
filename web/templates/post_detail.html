@@ -37,6 +37,7 @@
         {{if .CurrentUser}}
         <a class="button soft" href="/posts/{{.Post.ID}}/edit">Modifier</a>
         <form method="POST" action="/posts/{{.Post.ID}}/delete" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
           <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
         </form>
         {{end}}
@@ -51,6 +52,7 @@
 
     {{if .CurrentUser}}
     <form class="card form comment-form" method="POST" action="/api/comments/create">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
       <input type="hidden" name="post_id" value="{{.Post.ID}}">
       <label>
         Ajouter un commentaire
@@ -81,6 +83,7 @@
               data-post-id="{{.PostID}}"
               style="font-size: 0.8rem; padding: 6px 12px;">Modifier</button>
             <form method="POST" action="/api/comments/{{.ID}}/delete" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
               <button class="button danger" type="submit" data-confirm="Supprimer ce commentaire ?"
                 style="font-size: 0.8rem; padding: 6px 12px;">Supprimer</button>
             </form>
@@ -93,6 +96,7 @@
         {{if eq $.CurrentUser.ID .UserID}}
         <div class="comment-edit" id="edit-{{.ID}}" style="display:none; margin-top: 10px;">
           <form method="POST" action="/api/comments/update">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
             <input type="hidden" name="comment_id" value="{{.ID}}">
             <input type="hidden" name="post_id" value="{{.PostID}}">
             <textarea name="content" rows="3" style="width:100%; margin-bottom: 8px;" id="edit-content-{{.ID}}"></textarea>

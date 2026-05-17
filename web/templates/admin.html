@@ -21,11 +21,13 @@
         <td>{{if .Banned}}<span style="color: #ff4444; font-weight: 600;">Banni</span>{{else}}<span style="color: #00ff88;">Actif</span>{{end}}</td>
         <td style="display: flex; gap: 8px;">
           <form method="POST" action="/admin/users/{{.ID}}/ban" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
             <button class="button soft" type="submit" data-confirm="{{if .Banned}}D&#233;bannir cet utilisateur ?{{else}}Bannir cet utilisateur ?{{end}}">
               {{if .Banned}}D&#233;bannir{{else}}Bannir{{end}}
             </button>
           </form>
           <form method="POST" action="/admin/users/{{.ID}}/delete" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
             <button class="button danger" type="submit" data-confirm="Supprimer d&#233;finitivement ce compte ?">Supprimer</button>
           </form>
         </td>
@@ -54,6 +56,7 @@
         <td>{{.Author}}</td>
         <td>
           <form method="POST" action="/admin/posts/{{.ID}}/delete" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
             <button class="button danger" type="submit" data-confirm="Supprimer ce post ?">Supprimer</button>
           </form>
         </td>

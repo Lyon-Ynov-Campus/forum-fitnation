@@ -9,6 +9,7 @@
     </div>
 
     <form id="edit-post-form" class="form" method="POST" action="/posts/{{.Post.ID}}/update">
+      <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
       <label>
         Titre
         <input type="text" name="title" maxlength="120" value="{{.Post.Title}}" required>
